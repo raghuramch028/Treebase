@@ -10,7 +10,8 @@ import sys
 import subprocess
 import tempfile
 
-from flask import Flask, request, jsonify, render_template
+import uuid
+from flask import Flask, request, jsonify, render_template, session
 from backend.vcs_engine import VCSEngine
 
 app = Flask(
@@ -18,8 +19,21 @@ app = Flask(
     template_folder="../frontend/templates",
     static_folder="../frontend/static"
 )
+app.secret_key = os.environ.get("SECRET_KEY", "treebase-secret-key-1234")
 
-vcs = VCSEngine()
+@app.before_request
+def ensure_session():
+    if not request.path.startswith('/api/'):
+        return
+    if "uid" not in session:
+        session["uid"] = str(uuid.uuid4())
+
+def get_vcs():
+    uid = session.get("uid")
+    if not uid:
+        uid = str(uuid.uuid4())
+        session["uid"] = uid
+    return VCSEngine.load_from_db(uid)
 
 
 # ── Pages ─────────────────────────────────────────────────────────────────
@@ -33,87 +47,87 @@ def index():
 
 @app.route("/api/state")
 def get_state():
-    return jsonify(vcs.get_state())
+    return jsonify(get_vcs().get_state())
 
 
 # ── File management ────────────────────────────────────────────────────────
 
 @app.route("/api/files/add", methods=["POST"])
 def add_file():
-    return jsonify(vcs.add_file(request.json.get("filename", "")))
+    return jsonify(get_vcs().add_file(request.json.get("filename", "")))
 
 
 @app.route("/api/files/delete", methods=["POST"])
 def delete_file():
-    return jsonify(vcs.delete_file(request.json.get("filename", "")))
+    return jsonify(get_vcs().delete_file(request.json.get("filename", "")))
 
 
 @app.route("/api/files/rename", methods=["POST"])
 def rename_file():
     d = request.json
-    return jsonify(vcs.rename_file(d.get("old_name", ""), d.get("new_name", "")))
+    return jsonify(get_vcs().rename_file(d.get("old_name", ""), d.get("new_name", "")))
 
 
 @app.route("/api/files/switch", methods=["POST"])
 def switch_file():
-    return jsonify(vcs.switch_file(request.json.get("filename", "")))
+    return jsonify(get_vcs().switch_file(request.json.get("filename", "")))
 
 
 @app.route("/api/files/update", methods=["POST"])
 def update_file():
     d = request.json
-    return jsonify(vcs.update_content(d.get("filename", ""), d.get("content", "")))
+    return jsonify(get_vcs().update_content(d.get("filename", ""), d.get("content", "")))
 
 
 @app.route("/api/files/revert", methods=["POST"])
 def revert_file():
-    return jsonify(vcs.revert_file(request.json.get("filename", "")))
+    return jsonify(get_vcs().revert_file(request.json.get("filename", "")))
 
 
 # ── Undo / Redo ────────────────────────────────────────────────────────────
 
 @app.route("/api/undo", methods=["POST"])
 def undo():
-    return jsonify(vcs.undo())
+    return jsonify(get_vcs().undo())
 
 
 @app.route("/api/redo", methods=["POST"])
 def redo():
-    return jsonify(vcs.redo())
+    return jsonify(get_vcs().redo())
 
 
 # ── VCS ────────────────────────────────────────────────────────────────────
 
 @app.route("/api/commit", methods=["POST"])
 def commit():
-    return jsonify(vcs.commit(request.json.get("message", "")))
+    return jsonify(get_vcs().commit(request.json.get("message", "")))
 
 
 @app.route("/api/branch", methods=["POST"])
 def branch():
-    return jsonify(vcs.create_branch(request.json.get("name", "")))
+    return jsonify(get_vcs().create_branch(request.json.get("name", "")))
 
 
 @app.route("/api/merge", methods=["POST"])
 def merge():
-    return jsonify(vcs.merge_branch(request.json.get("name", "")))
+    return jsonify(get_vcs().merge_branch(request.json.get("name", "")))
 
 
 @app.route("/api/checkout/commit", methods=["POST"])
 def checkout_commit():
-    return jsonify(vcs.checkout_commit(request.json.get("commit_id", "")))
+    return jsonify(get_vcs().checkout_commit(request.json.get("commit_id", "")))
 
 
 @app.route("/api/checkout/branch", methods=["POST"])
 def checkout_branch():
-    return jsonify(vcs.checkout_branch(request.json.get("name", "")))
+    return jsonify(get_vcs().checkout_branch(request.json.get("name", "")))
 
 
 # ── Tree ───────────────────────────────────────────────────────────────────
 
 @app.route("/api/tree")
 def get_tree():
-    return jsonify({"mermaid": vcs.get_tree_mermaid()})
+    return jsonify({"mermaid": get_vcs().get_tree_mermaid()})
 
 
 # ── Run code ───────────────────────────────────────────────────────────────
@@ -149,7 +163,7 @@ def run_code():
 
 @app.route("/api/history")
 def get_history():
-    return jsonify({"history": vcs.get_full_history()})
+    return jsonify({"history": get_vcs().get_full_history()})
 
 if __name__ == "__main__":
     debug = os.environ.get("FLASK_DEBUG", "0") == "1"

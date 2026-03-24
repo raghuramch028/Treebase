@@ -14,6 +14,42 @@ Data structures per file:
 import uuid
 from datetime import datetime
 from collections import deque
+import pickle
+import os
+import sqlite3
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+def get_db_connection():
+    if DATABASE_URL:
+        import psycopg2
+        return psycopg2.connect(DATABASE_URL)
+    else:
+        return sqlite3.connect(".treebase_store.db")
+
+def init_db():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    if DATABASE_URL:
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                session_id VARCHAR(255) PRIMARY KEY,
+                vcs_data BYTEA,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+    else:
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                session_id TEXT PRIMARY KEY,
+                vcs_data BLOB,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 UNDO_LIMIT = 50
 
@@ -270,35 +306,63 @@ class FileVCS:
 
 class VCSEngine:
     """
-    Top-level manager.
+    Top-level manager per user session.
     file_registry: Hash Map {filename -> FileVCS}
     """
 
-    def __init__(self):
+    def __init__(self, session_id):
+        self.session_id = session_id
         self.file_registry = {}     # Hash Map
         self.active_file   = None
-        self._load_state()
 
-    def _save_state(self):
-        import pickle
-        import os
+    @classmethod
+    def load_from_db(cls, session_id):
+        engine = cls(session_id)
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
         try:
-            with open(".treebase_store.pkl", "wb") as f:
-                pickle.dump({"registry": self.file_registry, "active": self.active_file}, f)
-        except Exception as e:
-            pass
+            if DATABASE_URL:
+                cur.execute("SELECT vcs_data FROM user_sessions WHERE session_id = %s", (session_id,))
+            else:
+                cur.execute("SELECT vcs_data FROM user_sessions WHERE session_id = ?", (session_id,))
+            
+            row = cur.fetchone()
+            if row and row[0]:
+                blob = row[0]
+                if not isinstance(blob, bytes):
+                    if hasattr(blob, 'tobytes'): blob = blob.tobytes()
+                    else: blob = bytes(blob)
+                data = pickle.loads(blob)
+                engine.file_registry = data.get("registry", {})
+                engine.active_file = data.get("active", None)
+        finally:
+            conn.close()
+            
+        return engine
 
-    def _load_state(self):
-        import pickle
-        import os
-        if os.path.exists(".treebase_store.pkl"):
-            try:
-                with open(".treebase_store.pkl", "rb") as f:
-                    data = pickle.load(f)
-                    self.file_registry = data.get("registry", {})
-                    self.active_file = data.get("active", None)
-            except Exception as e:
-                pass
+    def save_to_db(self):
+        data = {"registry": self.file_registry, "active": self.active_file}
+        blob = pickle.dumps(data)
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        try:
+            if DATABASE_URL:
+                import psycopg2
+                cur.execute("""
+                    INSERT INTO user_sessions (session_id, vcs_data)
+                    VALUES (%s, %s)
+                    ON CONFLICT (session_id) DO UPDATE SET vcs_data = EXCLUDED.vcs_data, updated_at = CURRENT_TIMESTAMP
+                """, (self.session_id, psycopg2.Binary(blob)))
+            else:
+                cur.execute("""
+                    REPLACE INTO user_sessions (session_id, vcs_data, updated_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                """, (self.session_id, blob))
+            conn.commit()
+        finally:
+            conn.close()
 
     def _active(self):
         return self.file_registry[self.active_file]
@@ -313,7 +377,7 @@ class VCSEngine:
             return {"success": False, "error": f"'{filename}' already exists."}
         self.file_registry[filename] = FileVCS(filename)
         self.active_file = filename
-        self._save_state()
+        self.save_to_db()
         return self._full_state()
 
     def delete_file(self, filename):
@@ -325,7 +389,7 @@ class VCSEngine:
         if self.active_file == filename:
             remaining = list(self.file_registry.keys())
             self.active_file = remaining[max(0, idx - 1)] if remaining else None
-        self._save_state()
+        self.save_to_db()
         return self._full_state()
 
     def rename_file(self, old_name, new_name):
@@ -341,28 +405,28 @@ class VCSEngine:
         self.file_registry[new_name] = fvcs
         if self.active_file == old_name:
             self.active_file = new_name
-        self._save_state()
+        self.save_to_db()
         return self._full_state()
 
     def switch_file(self, filename):
         if filename not in self.file_registry:
             return {"success": False, "error": "File not found."}
         self.active_file = filename
-        self._save_state()
+        self.save_to_db()
         return self._full_state()
 
     def update_content(self, filename, content):
         if filename not in self.file_registry:
             return {"success": False, "error": "File not found."}
         self.file_registry[filename].update_content(content)
-        self._save_state()
+        self.save_to_db()
         return {"success": True}
 
     def revert_file(self, filename):
         if filename not in self.file_registry:
             return {"success": False, "error": "File not found."}
         res = self.file_registry[filename].revert_to_head()
-        self._save_state()
+        self.save_to_db()
         return res
 
     # ── Undo / Redo ───────────────────────────────────────────────────────
@@ -371,14 +435,14 @@ class VCSEngine:
         if not self.active_file:
             return {"success": False, "error": "No file open."}
         res = self._active().undo()
-        self._save_state()
+        self.save_to_db()
         return res
 
     def redo(self):
         if not self.active_file:
             return {"success": False, "error": "No file open."}
         res = self._active().redo()
-        self._save_state()
+        self.save_to_db()
         return res
 
     # ── VCS ───────────────────────────────────────────────────────────────
@@ -387,35 +451,35 @@ class VCSEngine:
         if not self.active_file:
             return {"success": False, "error": "No file open."}
         res = self._active().commit(message)
-        self._save_state()
+        self.save_to_db()
         return res
 
     def create_branch(self, name):
         if not self.active_file:
             return {"success": False, "error": "No file open."}
         res = self._active().create_branch(name)
-        self._save_state()
+        self.save_to_db()
         return res
 
     def merge_branch(self, target_branch):
         if not self.active_file:
             return {"success": False, "error": "No file open."}
         res = self._active().merge_branch(target_branch)
-        self._save_state()
+        self.save_to_db()
         return res
 
     def checkout_commit(self, commit_id):
         if not self.active_file:
             return {"success": False, "error": "No file open."}
         res = self._active().checkout_commit(commit_id)
-        self._save_state()
+        self.save_to_db()
         return res
 
     def checkout_branch(self, name):
         if not self.active_file:
             return {"success": False, "error": "No file open."}
         res = self._active().checkout_branch(name)
-        self._save_state()
+        self.save_to_db()
         return res
 
     def get_tree_mermaid(self):
