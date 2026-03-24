@@ -7,91 +7,73 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/static/css/style.css"/>
-  <style>
-    /* Tab-bar style (used by history panel) */
-    .tab-btn {
-      color:#9d9d9d; cursor:pointer; border:none; background:none;
-      border-right:1px solid rgba(255,255,255,0.07);
-      border-bottom:2px solid transparent;
-      white-space:nowrap; transition:all .12s; user-select:none;
-      position:relative; top:1px;
-    }
-    /* History list */
-    .history-item {
-      padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.06);
-      cursor:pointer; transition:background .12s;
-    }
-    .history-item:hover { background:rgba(255,255,255,0.04); }
-    .history-item.is-head { border-left:3px solid #9d9d9d; background:rgba(99,102,241,0.06); }
-    /* Branch open state */
-    #branch-wrap.open #branch-btn { background:rgba(99,102,241,0.18); border-color:rgba(99,102,241,0.5); color:#a5b4fc; }
-  </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden" style="background:#1e1e1e;color:#d4d4d4">
+<body class="h-screen flex flex-col overflow-hidden bg-slate-950 text-slate-200 antialiased selection:bg-indigo-500/30">
 
   <!-- ── Top bar ── -->
-  <header class="flex items-center justify-between px-5 py-2.5 border-b border-white/10 shrink-0" style="background:#252526">
-    <div class="flex items-center gap-3">
-      <div class="w-7 h-7 rounded-md bg-[#3a3a4a] border border-white/20 flex items-center justify-center" style="padding:4px">
+  <header class="flex items-center justify-between px-6 py-3 border-b border-white/5 shrink-0 bg-slate-900/40 backdrop-blur-xl z-20 shadow-sm shadow-black/20">
+    <div class="flex items-center gap-4">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.2)]" style="padding:6px">
         <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
-          <circle cx="6"  cy="5"  r="2.2" stroke="white"   stroke-width="1.8"/>
-          <circle cx="6"  cy="19" r="2.2" stroke="white"   stroke-width="1.8"/>
-          <circle cx="18" cy="9"  r="2.2" stroke="#a5b4fc" stroke-width="1.8"/>
+          <circle cx="6"  cy="5"  r="2.2" stroke="white" stroke-width="1.8"/>
+          <circle cx="6"  cy="19" r="2.2" stroke="white" stroke-width="1.8"/>
+          <circle cx="18" cy="9"  r="2.2" stroke="#818cf8" stroke-width="1.8"/>
           <line x1="6" y1="7.2" x2="6" y2="16.8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M6 7.5 C6 12 10 7 18 7" stroke="#a5b4fc" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <path d="M6 7.5 C6 12 10 7 18 7" stroke="#818cf8" stroke-width="1.8" stroke-linecap="round" fill="none"/>
         </svg>
       </div>
-      <span class="text-sm font-bold tracking-wide text-white" style="font-family:'JetBrains Mono',monospace">Treebase</span>
-      <span id="branch-badge" class="text-xs px-2 py-0.5 rounded-full font-mono border" style="background:rgba(255,255,255,0.08);color:#a0a0a0;border-color:rgba(255,255,255,0.15)">—</span>
+      <span class="text-sm font-bold tracking-wider text-white" style="font-family:'Outfit',sans-serif">Treebase</span>
+      <span id="branch-badge" class="font-mono text-[10px] px-2.5 py-1 rounded-full border bg-white/5 border-white/10 text-slate-400 font-semibold tracking-wide">—</span>
     </div>
 
-    <div class="flex items-center gap-2">
-      <div id="branch-wrap" style="position:relative;display:flex;align-items:center;">
-        <div id="branch-slide" style="display:flex;align-items:center;max-width:0;overflow:hidden;transition:max-width .3s ease,opacity .3s ease;opacity:0;">
-          <input id="branch-input" type="text" placeholder="branch name…"
-            style="width:136px;margin-right:6px;background:#3c3c3c;border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#d4d4d4;outline:none;"
+    <div class="flex items-center gap-3">
+      <div id="branch-wrap" class="relative flex items-center group">
+        <div id="branch-slide" class="flex items-center max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out">
+          <input id="branch-input" type="text" placeholder="branch name…" class="vcs-input w-36 mr-2"
             onkeydown="if(event.key==='Enter') createBranch()"/>
         </div>
-        <button id="branch-btn" class="btn-secondary text-xs">Branch</button>
+        <button id="branch-btn" class="btn-secondary">Branch</button>
       </div>
-      <button onclick="mergeBranch()" class="btn-secondary text-xs" style="margin-left:8px;">Merge</button>
-      <input id="commit-msg" type="text" placeholder="commit message…"
-        style="background:#3c3c3c;border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:5px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#d4d4d4;outline:none;width:180px;"
-        onkeydown="if(event.key==='Enter') doCommit()"
-        onfocus="this.style.borderColor='rgba(99,102,241,0.6)'"
-        onblur="this.style.borderColor='rgba(255,255,255,0.1)'"/>
-      <button onclick="doCommit()" class="btn-primary text-xs">Commit</button>
-      <button onclick="openTree()" class="btn-secondary text-xs">Tree</button>
-      <button onclick="openHistory()" class="btn-secondary text-xs">History</button>
+      <button onclick="mergeBranch()" class="btn-secondary ml-1">Merge</button>
+      <input id="commit-msg" type="text" placeholder="commit message…" class="vcs-input w-48 ml-1"
+        onkeydown="if(event.key==='Enter') doCommit()"/>
+      <button onclick="doCommit()" class="btn-primary">Commit</button>
+      <div class="w-px h-6 bg-white/10 mx-1"></div>
+      <button onclick="openTree()" class="btn-secondary">Tree</button>
+      <button onclick="openHistory()" class="btn-secondary">History</button>
     </div>
   </header>
 
   <!-- ── Main layout ── -->
-  <div class="flex flex-1 overflow-hidden">
+  <div class="flex flex-1 overflow-hidden relative">
+    
+    <!-- Background glowing orbs (optional aesthetics) -->
+    <div class="absolute top-[-100px] left-[-100px] w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <div class="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
 
     <!-- Files sidebar -->
-    <aside id="files-panel" class="shrink-0 border-r border-white/10 flex flex-col" style="width:180px;min-width:120px;max-width:300px;background:#252526">
-      <div class="flex items-center justify-between px-3 py-2 border-b border-white/10">
-        <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:#858585">Files</span>
-        <button onclick="addFile()" style="color:#6366f1;font-size:18px;line-height:1;background:none;border:none;cursor:pointer;" onmouseover="this.style.color='#818cf8'" onmouseout="this.style.color='#6366f1'">+</button>
+    <aside id="files-panel" class="relative z-10 shrink-0 border-r border-white/5 flex flex-col bg-slate-900/30 backdrop-blur-md" style="width:200px;min-width:140px;max-width:320px;">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Explorer</span>
+        <button onclick="addFile()" class="text-indigo-400 hover:text-indigo-300 transform hover:scale-110 text-lg leading-none transition-all duration-200" title="New File">+</button>
       </div>
-      <ul id="file-list" class="flex-1 overflow-y-auto py-1"></ul>
+      <ul id="file-list" class="flex-1 overflow-y-auto py-2 px-1"></ul>
     </aside>
 
-    <div class="resize-x" id="resize-files"></div>
+    <div class="resize-x relative z-20" id="resize-files"></div>
 
     <!-- Editor + terminal -->
-    <main class="flex-1 flex flex-col overflow-hidden min-w-0" style="background:#1e1e1e">
+    <main class="relative z-10 flex-1 flex flex-col overflow-hidden min-w-0 bg-transparent">
 
       <!-- Toolbar -->
-      <div class="flex items-center justify-between px-3 py-1.5 border-b border-white/8 shrink-0" style="background:#1e1e1e">
-        <span id="active-filename" class="text-[11px] font-mono" style="color:#858585">no file open</span>
-        <div class="flex items-center gap-1.5">
+      <div class="flex items-center justify-between px-4 py-2 border-b border-white/5 shrink-0 bg-slate-900/20 backdrop-blur-sm">
+        <span id="active-filename" class="text-[11px] font-mono text-indigo-200/70 font-medium">no file open</span>
+        <div class="flex items-center gap-2">
           <button onclick="doUndo()" title="Undo" class="btn-icon">↩</button>
           <button onclick="doRedo()" title="Redo" class="btn-icon">↪</button>
-          <button onclick="runCode()" class="btn-run text-xs">
+          <button onclick="runCode()" class="btn-run">
             <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><path d="M3 2l7 4-7 4V2z"/></svg>
             Run
           </button>
@@ -101,66 +83,71 @@
       <!-- Editor wrapper -->
       <div class="flex-1 overflow-hidden relative" id="editor-wrapper" style="display:flex"></div>
 
-      <div class="resize-y" id="resize-terminal"></div>
+      <div class="resize-y relative z-20" id="resize-terminal"></div>
 
       <!-- Terminal -->
-      <div id="terminal-panel" class="border-t border-white/10 flex flex-col shrink-0" style="height:150px;min-height:50px;max-height:400px;background:#1e1e1e">
-        <div class="flex items-center justify-between px-4 py-1.5 border-b border-white/10" style="background:#252526">
-          <span class="text-[10px] font-mono uppercase tracking-widest" style="color:#858585">Terminal</span>
-          <button onclick="clearTerminal()" class="text-[10px] font-mono hover:text-gray-400" style="color:#555;background:none;border:none;cursor:pointer">clear</button>
+      <div id="terminal-panel" class="border-t border-white/5 flex flex-col shrink-0 bg-slate-950/80 backdrop-blur-md" style="height:180px;min-height:60px;max-height:400px;">
+        <div class="flex items-center justify-between px-5 py-2 border-b border-white/5 bg-slate-900/60">
+          <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase flex items-center gap-2">
+            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div> Terminal 
+          </span>
+          <button onclick="clearTerminal()" class="text-[10px] font-mono text-slate-500 hover:text-slate-300 transition-colors">clear</button>
         </div>
-        <pre id="terminal" class="flex-1 overflow-y-auto px-4 py-2 text-xs font-mono leading-relaxed whitespace-pre-wrap" style="color:#858585"></pre>
+        <pre id="terminal" class="flex-1 overflow-y-auto px-5 py-3 text-[11px] font-mono leading-loose whitespace-pre-wrap text-slate-300 selection:bg-indigo-500/40"></pre>
       </div>
     </main>
 
-    <div class="resize-x" id="resize-activity"></div>
+    <div class="resize-x relative z-20" id="resize-activity"></div>
 
     <!-- Right: activity + branches -->
-    <aside id="activity-panel" class="shrink-0 border-l border-white/10 flex flex-col" style="width:230px;min-width:160px;max-width:340px;background:#252526">
-      <div class="px-3 py-2 border-b border-white/10">
-        <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:#858585">Recent Activity</span>
-        <p class="text-[9px] mt-0.5" style="color:#444">Click to checkout</p>
+    <aside id="activity-panel" class="relative z-10 shrink-0 border-l border-white/5 flex flex-col bg-slate-900/30 backdrop-blur-md" style="width:280px;min-width:200px;max-width:400px;">
+      <div class="px-4 py-3 border-b border-white/5">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Activity Log</span>
+        <p class="text-[9px] mt-1 text-slate-500 font-medium">Click to checkout timeline</p>
       </div>
-      <ul id="activity-log" class="overflow-y-auto py-1" style="flex:1;min-height:0"></ul>
-      <div class="border-t border-white/10 px-3 py-3 shrink-0">
-        <span class="text-[10px] font-semibold uppercase tracking-widest" style="color:#858585">Branches</span>
-        <ul id="branch-list" class="mt-2 space-y-1"></ul>
+      <ul id="activity-log" class="overflow-y-auto py-2 px-1" style="flex:1;min-height:0"></ul>
+      
+      <div class="border-t border-white/5 px-4 py-4 shrink-0 bg-slate-900/20 backdrop-blur-md">
+        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Branches</span>
+        <ul id="branch-list" class="mt-3 space-y-1"></ul>
       </div>
     </aside>
   </div>
 
   <!-- ── Tree modal ── -->
-  <div id="tree-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-8" style="background:rgba(0,0,0,0.75)">
-    <div class="border border-white/15 rounded-xl flex flex-col shadow-2xl" style="background:#252526;width:90%;max-width:920px;height:82vh">
-      <div class="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
+  <div id="tree-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-0">
+    <div class="glass-modal rounded-2xl flex flex-col transform scale-95 transition-all duration-300" style="width:90%;max-width:960px;height:85vh">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0 bg-white/[0.02]">
         <div class="flex items-center gap-3">
-          <span class="text-sm font-semibold text-white" style="font-family:'JetBrains Mono',monospace">Commit Tree</span>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded" style="background:rgba(255,255,255,0.06);color:#858585">DFS Traversal · N-ary Tree</span>
-          <span id="tree-file-label" class="text-[10px] font-mono px-2 py-0.5 rounded border" style="color:#a0a0a0;border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.07)"></span>
+          <span class="text-sm font-semibold text-white tracking-wide">Commit Tree</span>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold shadow-[0_0_10px_rgba(99,102,241,0.2)]">DFS Traversal · N-ary Tree</span>
+          <span id="tree-file-label" class="text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-slate-400"></span>
         </div>
-        <button onclick="closeTree()" class="text-gray-500 hover:text-white text-xl w-7 h-7 flex items-center justify-center rounded hover:bg-white/10" style="background:none;border:none;cursor:pointer">×</button>
+        <button onclick="closeTree()" class="text-slate-400 hover:text-white hover:bg-white/10 text-xl w-8 h-8 flex items-center justify-center rounded-lg transition-colors">×</button>
       </div>
-      <div id="tree-content" class="flex-1 overflow-auto p-8 flex items-center justify-center"></div>
-      <div class="px-5 py-2 border-t border-white/8 shrink-0">
-        <span class="text-[10px] font-mono" style="color:#555">● Indigo = current HEAD &nbsp;·&nbsp; Each node = one commit &nbsp;·&nbsp; Branches = forks in tree</span>
+      <div id="tree-content" class="flex-1 overflow-auto p-8 flex items-center justify-center relative"></div>
+      <div class="px-6 py-3 border-t border-white/10 shrink-0 bg-white/[0.02] flex items-center gap-4">
+        <span class="text-[10px] font-medium text-slate-400 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-indigo-500"></div> Current HEAD</span>
+        <span class="text-[10px] font-medium text-slate-500">·</span>
+        <span class="text-[10px] font-medium text-slate-400">Branches visually diverge on forks</span>
       </div>
     </div>
   </div>
 
   <!-- ── History modal ── -->
-  <div id="history-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-8" style="background:rgba(0,0,0,0.75)">
-    <div class="border border-white/15 rounded-xl flex flex-col shadow-2xl" style="background:#252526;width:680px;max-width:95%;height:72vh">
-      <div class="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
+  <div id="history-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-0">
+    <div class="glass-modal rounded-2xl flex flex-col transform scale-95 transition-all duration-300" style="width:720px;max-width:95%;height:75vh">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0 bg-white/[0.02]">
         <div class="flex items-center gap-3">
-          <span class="text-sm font-semibold text-white" style="font-family:'JetBrains Mono',monospace">File History</span>
-          <span id="history-filename" class="text-[10px] font-mono px-2 py-0.5 rounded border" style="color:#a0a0a0;border-color:rgba(255,255,255,0.15);background:rgba(255,255,255,0.07)"></span>
+          <span class="text-sm font-semibold text-white tracking-wide">File History</span>
+          <span id="history-filename" class="text-[10px] font-mono px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-slate-400 font-medium"></span>
         </div>
-        <button onclick="closeHistory()" class="text-gray-500 hover:text-white text-xl w-7 h-7 flex items-center justify-center rounded hover:bg-white/10" style="background:none;border:none;cursor:pointer">×</button>
+        <button onclick="closeHistory()" class="text-slate-400 hover:text-white hover:bg-white/10 text-xl w-8 h-8 flex items-center justify-center rounded-lg transition-colors">×</button>
       </div>
-      <div class="px-4 py-2 border-b border-white/8 shrink-0">
-        <p class="text-[10px] font-mono" style="color:#555">All commits for this file across all branches — click any commit to restore it</p>
+      <div class="px-6 py-2.5 border-b border-white/5 shrink-0 bg-white/[0.01]">
+        <p class="text-[11px] font-medium text-slate-500">Timeline of all modifications across all branches. Click any snapshot to restore it.</p>
       </div>
-      <div id="history-list" class="flex-1 overflow-y-auto"></div>
+      <div id="history-list" class="flex-1 overflow-y-auto python-scrollbar"></div>
     </div>
   </div>
 
@@ -168,6 +155,51 @@
   <script src="/static/js/vcs.js"></script>
   <script src="/static/js/app.js"></script>
   <script>
+    // JS to handle soft fade-in of modals
+    const tm = document.getElementById("tree-modal");
+    const hm = document.getElementById("history-modal");
+    
+    function attachModalFadeListeners() {
+       const oOpenTree = openTree;
+       openTree = function() {
+           tm.classList.remove("hidden");
+           setTimeout(() => {
+               tm.classList.remove("opacity-0");
+               tm.firstElementChild.classList.remove("scale-95");
+           }, 10);
+           oOpenTree();
+       };
+       const oCloseTree = closeTree;
+       closeTree = function() {
+           tm.classList.add("opacity-0");
+           tm.firstElementChild.classList.add("scale-95");
+           setTimeout(() => {
+               oCloseTree();
+               tm.classList.add("hidden");
+           }, 300);
+       };
+       
+       const oOpenHistory = openHistory;
+       openHistory = function() {
+           hm.classList.remove("hidden");
+           setTimeout(() => {
+               hm.classList.remove("opacity-0");
+               hm.firstElementChild.classList.remove("scale-95");
+           }, 10);
+           oOpenHistory();
+       };
+       const oCloseHistory = closeHistory;
+       closeHistory = function() {
+           hm.classList.add("opacity-0");
+           hm.firstElementChild.classList.add("scale-95");
+           setTimeout(() => {
+               oCloseHistory();
+               hm.classList.add("hidden");
+           }, 300);
+       };
+    }
+    attachModalFadeListeners();
+
     // Resize
     function resizeX(hId,pId,side){const h=document.getElementById(hId),p=document.getElementById(pId);let drag=false,sx,sw;h.addEventListener("mousedown",e=>{drag=true;sx=e.clientX;sw=p.offsetWidth;h.classList.add("dragging");document.body.style.cssText+=";cursor:col-resize;user-select:none";});document.addEventListener("mousemove",e=>{if(!drag)return;const d=side==="left"?e.clientX-sx:sx-e.clientX;p.style.width=Math.min(parseInt(p.style.maxWidth)||400,Math.max(parseInt(p.style.minWidth)||120,sw+d))+"px";});document.addEventListener("mouseup",()=>{if(!drag)return;drag=false;h.classList.remove("dragging");document.body.style.cursor="";document.body.style.userSelect="";});}
     function resizeY(hId,pId){const h=document.getElementById(hId),p=document.getElementById(pId);let drag=false,sy,sh;h.addEventListener("mousedown",e=>{drag=true;sy=e.clientY;sh=p.offsetHeight;h.classList.add("dragging");document.body.style.cssText+=";cursor:row-resize;user-select:none";});document.addEventListener("mousemove",e=>{if(!drag)return;const d=sy-e.clientY;p.style.height=Math.min(parseInt(p.style.maxHeight)||400,Math.max(parseInt(p.style.minHeight)||50,sh+d))+"px";});document.addEventListener("mouseup",()=>{if(!drag)return;drag=false;h.classList.remove("dragging");document.body.style.cursor="";document.body.style.userSelect="";});}
@@ -177,15 +209,15 @@
 
     // Branch slide
     const bWrap=document.getElementById("branch-wrap"),bSlide=document.getElementById("branch-slide"),bBtn=document.getElementById("branch-btn"),bInput=document.getElementById("branch-input");
-    function openBranch(){bWrap.classList.add("open");bSlide.style.maxWidth="180px";bSlide.style.opacity="1";setTimeout(()=>bInput.focus(),310);}
-    function closeBranch(){bWrap.classList.remove("open");bSlide.style.maxWidth="0";bSlide.style.opacity="0";bInput.value="";}
+    function openBranch(){bWrap.classList.add("open");bSlide.style.maxWidth="180px";bSlide.classList.remove("opacity-0");setTimeout(()=>bInput.focus(),310);}
+    function closeBranch(){bWrap.classList.remove("open");bSlide.style.maxWidth="0";bSlide.classList.add("opacity-0");bInput.value="";}
     bBtn.addEventListener("mouseenter",openBranch);
     bWrap.addEventListener("mouseleave",()=>{if(document.activeElement!==bInput)closeBranch();});
     bInput.addEventListener("blur",()=>setTimeout(()=>{if(document.activeElement!==bBtn)closeBranch();},150));
     bBtn.addEventListener("click",()=>{if(bWrap.classList.contains("open")&&bInput.value.trim())createBranch();});
 
-    document.getElementById("tree-modal").addEventListener("click",e=>{if(e.target.id==="tree-modal")closeTree();});
-    document.getElementById("history-modal").addEventListener("click",e=>{if(e.target.id==="history-modal")closeHistory();});
+    tm.addEventListener("click",e=>{if(e.target===tm)closeTree();});
+    hm.addEventListener("click",e=>{if(e.target===hm)closeHistory();});
   </script>
 </body>
 </html>

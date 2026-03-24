@@ -1,166 +1,177 @@
-/* style.css — Treebase */
+/* style.css — Treebase Premium Redesign */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
 
 :root {
-  --accent:  #5a5a6e;
-  --accent2: #45455a;
-  --bg:      #1e1e1e;
-  --surface: #252526;
-  --border:  rgba(255,255,255,0.08);
-  --font:    'JetBrains Mono', Consolas, monospace;
+  --bg: #0f172a; /* slate-900 */
+  --surface: rgba(30, 41, 59, 0.7); 
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #6366f1; /* indigo-500 */
+  --accent-glow: rgba(99, 102, 241, 0.4);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --font: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
 }
 
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:var(--font); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--text-main); background: var(--bg); }
 
-/* ── Global scrollbar ── */
-::-webkit-scrollbar       { width:8px; height:8px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:#3e3e42; border-radius:0; }
-::-webkit-scrollbar-thumb:hover { background:#555; }
+/* Globals */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 
-/* ── Buttons — all same font, no emojis, consistent style ── */
+/* Beautiful Inputs */
+#branch-input, #commit-msg {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: var(--font-mono); font-size: 11px;
+  color: #f1f5f9; outline: none; transition: all 0.2s ease;
+}
+#branch-input:focus, #commit-msg:focus {
+  border-color: rgba(99, 102, 241, 0.6);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Stunning Buttons */
 .btn-primary {
-  background:#3a3a4a; color:#d4d4d4;
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:4px; padding:5px 14px;
-  font-family:var(--font); font-size:11px; font-weight:600;
-  cursor:pointer; transition:all .15s; letter-spacing:0.02em;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; border: none; border-radius: 8px;
+  padding: 6px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px var(--accent-glow);
 }
-.btn-primary:hover { background:#4a4a5a; color:#fff; border-color:rgba(255,255,255,0.25); }
+.btn-primary:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 16px var(--accent-glow); filter: brightness(1.1);
+}
+.btn-primary:active { transform: translateY(1px) scale(0.98); }
 
 .btn-secondary {
-  background:transparent; color:#9d9d9d;
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:4px; padding:5px 14px;
-  font-family:var(--font); font-size:11px;
-  cursor:pointer; transition:all .15s; letter-spacing:0.02em;
+  background: rgba(255, 255, 255, 0.03); color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
+  padding: 6px 16px; font-family: var(--font-mono); font-size: 11px;
+  cursor: pointer; transition: all 0.2s ease; backdrop-filter: blur(4px);
 }
-.btn-secondary:hover { background:rgba(255,255,255,0.06); color:#d4d4d4; border-color:rgba(255,255,255,0.2); }
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.08); color: #fff;
+  border-color: rgba(255, 255, 255, 0.2); transform: translateY(-1px);
+}
 
 .btn-run {
-  background:rgba(34,197,94,0.12); color:#4ade80;
-  border:1px solid rgba(34,197,94,0.25);
-  border-radius:4px; padding:4px 14px;
-  font-family:var(--font); font-size:11px; font-weight:600;
-  cursor:pointer; transition:all .15s;
-  display:flex; align-items:center; gap:5px;
+  background: rgba(34, 197, 94, 0.1); color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 8px;
+  padding: 6px 16px; font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
 }
-.btn-run:hover { background:rgba(34,197,94,0.22); border-color:rgba(34,197,94,0.4); }
+.btn-run:hover {
+  background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.4);
+  transform: translateY(-1px); box-shadow: 0 6px 16px rgba(34, 197, 94, 0.25);
+}
 
 .btn-icon {
-  background:transparent; color:#6e6e6e;
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:4px; padding:4px 9px;
-  font-size:13px; cursor:pointer; transition:all .15s;
-  font-family:var(--font);
+  background: transparent; color: #64748b; border: none; border-radius: 6px;
+  padding: 6px 10px; font-size: 14px; cursor: pointer; transition: all 0.2s ease;
 }
-.btn-icon:hover { color:#d4d4d4; background:rgba(255,255,255,0.06); }
+.btn-icon:hover { color: #f8fafc; background: rgba(255, 255, 255, 0.08); }
 
-/* ── File list ── */
+/* File List Elements */
 .file-item {
-  display:flex; align-items:center;
-  justify-content:space-between;
-  padding:6px 8px 6px 12px;
-  font-size:11px; font-family:var(--font);
-  color:#6e6e6e; cursor:pointer;
-  border-left:2px solid transparent;
-  border-bottom:1px solid rgba(255,255,255,0.03);
-  transition:all .12s;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px 8px 14px; font-size: 12px; font-family: var(--font-mono);
+  color: var(--text-muted); cursor: pointer; border-left: 2px solid transparent;
+  transition: all 0.2s ease; border-radius: 0 6px 6px 0; margin-bottom: 2px;
 }
-.file-item:hover      { background:rgba(255,255,255,0.04); color:#c0c0c0; }
-.file-item.active     { color:#d4d4d4; border-left-color:#8a8a9a; background:rgba(255,255,255,0.06); }
-.file-label           { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.file-btns            { display:flex; gap:2px; opacity:0; transition:opacity .15s; flex-shrink:0; }
-.file-item:hover .file-btns { opacity:1; }
+.file-item:hover { background: rgba(255, 255, 255, 0.03); color: #cbd5e1; }
+.file-item.active {
+  color: #fff; border-left-color: var(--accent);
+  background: linear-gradient(90deg, rgba(99,102,241,0.1) 0%, transparent 100%);
+}
+.file-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-btns { display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; }
+.file-item:hover .file-btns { opacity: 1; }
 .file-btn {
-  background:none; border:none; cursor:pointer;
-  font-size:11px; padding:2px 5px; border-radius:3px;
-  color:#555; transition:all .12s; line-height:1;
-  font-family:var(--font);
+  background: rgba(255,255,255,0.05); border: none; cursor: pointer;
+  font-size: 11px; padding: 3px 6px; border-radius: 4px;
+  color: var(--text-muted); transition: all 0.2s; font-family: var(--font-mono);
 }
-.file-btn:hover        { background:rgba(255,255,255,0.08); }
-.file-btn.rename:hover { color:#c0c0c0; }
-.file-btn.delete:hover { color:#f87171; }
+.file-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.file-btn.delete:hover { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 
-/* ── Activity log ── */
+/* Activity Log Elements */
 .commit-item {
-  padding:8px 12px; cursor:pointer;
-  border-bottom:1px solid rgba(255,255,255,0.04);
-  border-left:2px solid transparent;
-  transition:background .12s;
+  padding: 10px 14px; cursor: pointer; border-left: 2px solid transparent;
+  transition: all 0.2s ease; margin-bottom: 4px; border-radius: 0 6px 6px 0;
 }
-.commit-item:hover { background:rgba(255,255,255,0.03); }
-.commit-item.head  { border-left-color:#8a8a9a; background:rgba(255,255,255,0.05); }
+.commit-item:hover { background: rgba(255, 255, 255, 0.02); }
+.commit-item.head {
+  border-left-color: var(--accent);
+  background: linear-gradient(90deg, rgba(99,102,241,0.08) 0%, transparent 100%);
+}
+.c-msg { font-size: 12px; color: #e2e8f0; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-meta { font-size: 10px; color: #64748b; font-family: var(--font-mono); margin-top: 3px; }
+.c-time { font-size: 9px; color: #475569; font-family: var(--font-mono); margin-top: 2px; }
 
-.c-msg  { font-size:11px; color:#c8c8c8; font-family:var(--font);
-          white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.c-meta { font-size:9px; color:#555; font-family:var(--font); margin-top:2px; }
-.c-time { font-size:9px; color:#444; font-family:var(--font); margin-top:1px; }
-
-/* ── Branch list ── */
+/* Branch List Elements */
 .branch-item {
-  font-size:10px; font-family:var(--font);
-  color:#6e6e6e; padding:4px 8px; cursor:pointer;
-  border-radius:3px; border:1px solid transparent;
-  transition:all .12s;
+  font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);
+  padding: 6px 10px; cursor: pointer; border-radius: 6px; border: 1px solid transparent;
+  transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
 }
-.branch-item:hover  { color:#c0c0c0; background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); }
-.branch-item.active { color:#d4d4d4; background:rgba(255,255,255,0.08); border-color:rgba(255,255,255,0.15); }
-
-/* ── Empty messages ── */
-.empty-msg {
-  padding:14px 12px;
-  font-size:10px; font-family:var(--font);
-  color:#444; line-height:1.6;
+.branch-item::before {
+  content: ''; display: block; width: 6px; height: 6px; border-radius: 50%;
+  background: #475569; transition: background 0.2s ease;
 }
+.branch-item:hover { color: #e2e8f0; background: rgba(255, 255, 255, 0.03); }
+.branch-item.active { color: #fff; background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); }
+.branch-item.active::before { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
 
-/* ── Toast ── */
-#toast {
-  position:fixed; bottom:20px; left:50%;
-  transform:translateX(-50%) translateY(12px);
-  background:#2d2d2d; border:1px solid rgba(255,255,255,0.12);
-  color:#d4d4d4; font-family:var(--font); font-size:11px;
-  padding:7px 18px; border-radius:4px;
-  opacity:0; pointer-events:none;
-  transition:all .2s ease; z-index:9999;
+/* Modals */
+.glass-modal {
+  background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 24px 48px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
 }
-#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-
-/* ── Resize handles ── */
-.resize-x {
-  width:3px; cursor:col-resize; flex-shrink:0;
-  background:rgba(255,255,255,0.04); transition:background .15s;
-}
-.resize-x:hover, .resize-x.dragging { background:#555; }
-
-.resize-y {
-  height:3px; cursor:row-resize; flex-shrink:0;
-  background:rgba(255,255,255,0.05); transition:background .15s;
-}
-.resize-y:hover, .resize-y.dragging { background:#555; }
-
-/* ── Mermaid ── */
-#tree-content .mermaid svg { background:transparent !important; }
-
-/* ── History modal items ── */
 .history-item {
-  padding:11px 16px;
-  border-bottom:1px solid rgba(255,255,255,0.05);
-  cursor:pointer; transition:background .12s;
-  font-family:var(--font);
+  padding: 14px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer; transition: all 0.2s ease; font-family: var(--font-mono);
 }
-.history-item:hover  { background:rgba(255,255,255,0.04); }
-.history-item.is-head { border-left:2px solid #8a8a9a; background:rgba(255,255,255,0.05); }
+.history-item:hover { background: rgba(255, 255, 255, 0.03); padding-left: 24px; }
+.history-item.is-head { 
+  border-left: 3px solid var(--accent); 
+  background: linear-gradient(90deg, rgba(99,102,241,0.05) 0%, transparent 100%);
+}
 
-/* ── Editor + Terminal scrollbars ── */
-#editor::-webkit-scrollbar,
-#terminal::-webkit-scrollbar         { width:10px; height:10px; }
-#editor::-webkit-scrollbar-track,
-#terminal::-webkit-scrollbar-track   { background:#1e1e1e; }
-#editor::-webkit-scrollbar-thumb,
-#terminal::-webkit-scrollbar-thumb   { background:#3e3e42; border-radius:0; }
-#editor::-webkit-scrollbar-thumb:hover,
-#terminal::-webkit-scrollbar-thumb:hover { background:#606060; }
-#editor::-webkit-scrollbar-corner,
-#terminal::-webkit-scrollbar-corner  { background:#1e1e1e; }
-#terminal { scrollbar-width:thin; scrollbar-color:#3e3e42 #1e1e1e; }
+#tree-content .mermaid { background: transparent !important; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff; font-family: var(--font); font-size: 13px; font-weight: 500;
+  padding: 10px 24px; border-radius: 30px; opacity: 0; pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Resizers */
+.resize-x { width: 4px; cursor: col-resize; flex-shrink: 0; background: transparent; transition: background 0.2s; }
+.resize-x:hover, .resize-x.dragging { background: rgba(99, 102, 241, 0.5); }
+.resize-y { height: 4px; cursor: row-resize; flex-shrink: 0; background: transparent; transition: background 0.2s; }
+.resize-y:hover, .resize-y.dragging { background: rgba(99, 102, 241, 0.5); }
+
+/* Scrollbars for distinct editor/terminal */
+#editor::-webkit-scrollbar, #terminal::-webkit-scrollbar { width: 8px; height: 8px; }
+#editor::-webkit-scrollbar-track, #terminal::-webkit-scrollbar-track { background: transparent; }
+#editor::-webkit-scrollbar-thumb, #terminal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+#editor::-webkit-scrollbar-thumb:hover, #terminal::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+@keyframes fadeSlideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.file-item, .commit-item, .branch-item { animation: fadeSlideUp 0.3s ease forwards; }
+
+.empty-msg { padding: 14px 12px; font-size: 11px; font-family: var(--font-mono); color: var(--text-muted); line-height: 1.6; }
