@@ -1,10 +1,10 @@
-# Treebase 🌳
+# Treebase 
 
 Treebase is a custom Version Control System (VCS) and Code Editor built from the ground up. It provides Git-like capabilities wrapped in a sleek, modern web interface.
 
-🌐 **Live Demo:** [https://treebase.onrender.com](https://treebase.onrender.com)
+** Live Demo:** [https://treebase.onrender.com](https://treebase.onrender.com)
 
-## 🚀 Features
+## Features
 
 - **In-Browser Code Editor**: Write and edit your code directly in the web UI.
 - **Commit History**: Save points in time with commit messages.
@@ -13,13 +13,13 @@ Treebase is a custom Version Control System (VCS) and Code Editor built from the
 - **Visual Commit Tree**: An interactive, automatically generated Mermaid.js diagram showing your branch history and merges.
 - **Code Execution Environment**: Run your Python code securely directly from the UI and see the output.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend**: Python, Flask
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript, Mermaid.js
 - **Deployment**: Docker, Gunicorn
 
-## 💻 Local Development
+## Local Development
 
 1. Clone the repository:
    ```bash
@@ -39,7 +39,7 @@ Treebase is a custom Version Control System (VCS) and Code Editor built from the
 
 4. Open your browser to `http://127.0.0.1:5000`
 
-## 🐳 Docker Deployment (Render)
+## Docker Deployment (Render)
 
 This project is fully containerized and configured to deploy seamlessly to cloud providers like Render.
 
