@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: treebase
+    env: docker
+    plan: free
+    dockerCommand: gunicorn --workers 2 --bind 0.0.0.0:5000 wsgi:app
