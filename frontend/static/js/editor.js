@@ -16,7 +16,7 @@ const CLOSERS = new Set(Object.values(PAIRS));
 function initEditor() {
   const wrapper = document.getElementById("editor-wrapper");
   wrapper.innerHTML = "";
-  wrapper.style.cssText = "position:relative;display:flex;flex-direction:row;overflow:hidden;background:#1e1e1e;";
+  wrapper.style.cssText = "position:relative;display:flex;flex-direction:row;overflow:hidden;background:transparent;";
 
   // ── Line numbers pane ────────────────────────────────────────────────
   const linePane = document.createElement("div");
@@ -24,8 +24,8 @@ function initEditor() {
   linePane.style.cssText = [
     "width:56px","min-width:56px","flex-shrink:0",
     "padding:14px 0","overflow:hidden",
-    "background:#1e1e1e",
-    "border-right:1px solid #3e3e42",
+    "background:transparent",
+    "border-right:1px solid rgba(255,255,255,0.05)",
     "user-select:none","pointer-events:none",
     "font-family:'JetBrains Mono',Consolas,monospace",
     "font-size:14px","line-height:21px",
@@ -87,11 +87,11 @@ function initEditor() {
     st.id = "ed-scrollbar-style";
     st.textContent = `
       #editor::-webkit-scrollbar { width:10px; height:10px; }
-      #editor::-webkit-scrollbar-track { background:#1e1e1e; }
-      #editor::-webkit-scrollbar-thumb { background:#424242; border-radius:0; }
-      #editor::-webkit-scrollbar-thumb:hover { background:#666; }
-      #editor::-webkit-scrollbar-corner { background:#1e1e1e; }
-      #editor::selection { background:rgba(38,79,120,0.8); }
+      #editor::-webkit-scrollbar-track { background:transparent; }
+      #editor::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:4px; }
+      #editor::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.2); }
+      #editor::-webkit-scrollbar-corner { background:transparent; }
+      #editor::selection { background:rgba(99,102,241,0.4); }
     `;
     document.head.appendChild(st);
   }
