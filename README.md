@@ -2,6 +2,8 @@
 
 Treebase is a custom Version Control System (VCS) and Code Editor built from the ground up. It provides Git-like capabilities wrapped in a sleek, modern web interface.
 
+🌐 **Live Demo:** [https://treebase.onrender.com](https://treebase.onrender.com)
+
 ## 🚀 Features
 
 - **In-Browser Code Editor**: Write and edit your code directly in the web UI.
