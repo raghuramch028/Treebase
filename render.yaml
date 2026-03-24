@@ -4,3 +4,6 @@ services:
     env: docker
     plan: free
     dockerCommand: gunicorn --workers 2 --bind 0.0.0.0:5000 wsgi:app
+    envVars:
+      - key: DATABASE_URL
+        sync: false
