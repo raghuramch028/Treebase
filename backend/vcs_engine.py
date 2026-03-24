@@ -186,6 +186,19 @@ class FileVCS:
     def rename(self, new_name):
         self.filename = new_name
 
+    def _find_lca(self, node_a, node_b):
+        ancestors = set()
+        curr = node_a
+        while curr:
+            ancestors.add(curr.id)
+            curr = curr.parent
+        curr = node_b
+        while curr:
+            if curr.id in ancestors:
+                return curr
+            curr = curr.parent
+        return None
+
     def merge_branch(self, target_branch):
         if target_branch not in self.branches:
             return {"success": False, "error": f"Branch '{target_branch}' not found."}
@@ -194,7 +207,40 @@ class FileVCS:
         
         target_head = self.branches[target_branch]
         merge_msg = f"Merge branch '{target_branch}' into '{self.current_branch}'"
-        merged_content = self.content + f"\n\n# --- Merged from {target_branch} ---\n" + target_head.content
+        
+        lca = self._find_lca(self.head, target_head)
+        base_content = lca.content if lca else ""
+        mine_content = self.content
+        theirs_content = target_head.content
+
+        merged_content = ""
+        if mine_content == theirs_content:
+            merged_content = mine_content
+        else:
+            try:
+                import merge3
+                m3 = merge3.Merge3(
+                    base_content.splitlines(keepends=True),
+                    mine_content.splitlines(keepends=True),
+                    theirs_content.splitlines(keepends=True)
+                )
+                
+                merged_lines = []
+                for chunk in m3.merge_groups():
+                    if chunk[0] == 'conflict':
+                        merged_lines.append(f"<<<<<<< {self.current_branch}\n")
+                        merged_lines.extend(chunk[2]) # mine
+                        if chunk[2] and not chunk[2][-1].endswith('\n'): merged_lines.append('\n')
+                        merged_lines.append("=======\n")
+                        merged_lines.extend(chunk[3]) # theirs
+                        if chunk[3] and not chunk[3][-1].endswith('\n'): merged_lines.append('\n')
+                        merged_lines.append(f">>>>>>> {target_branch}\n")
+                    else:
+                        merged_lines.extend(chunk[1])
+                        
+                merged_content = "".join(merged_lines)
+            except ImportError:
+                merged_content = self.content + f"\n\n# --- Merged from {target_branch} ---\n" + target_head.content
         
         node = CommitNode(
             message=merge_msg,
