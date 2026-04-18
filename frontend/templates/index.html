@@ -10,10 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/static/css/style.css"/>
 </head>
-<body class="h-screen flex flex-col overflow-hidden bg-slate-950 text-slate-200 antialiased selection:bg-indigo-500/30">
+<body class="h-screen flex flex-col overflow-hidden bg-[#1e1e1e] text-[#cccccc] antialiased selection:bg-[#007acc]/30">
 
   <!-- ── Top bar ── -->
-  <header class="flex items-center justify-between px-6 py-3 border-b border-white/5 shrink-0 bg-slate-900/40 backdrop-blur-xl z-20 shadow-sm shadow-black/20">
+  <header class="flex items-center justify-between px-6 py-3 border-b border-[#333333] shrink-0 bg-[#252526] z-20 shadow-sm shadow-black/20">
     <div class="flex items-center gap-4">
       <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 flex items-center justify-center shadow-[0_0_15px_rgba(99,102,241,0.2)]" style="padding:6px">
         <svg viewBox="0 0 24 24" fill="none" width="100%" height="100%">
@@ -25,7 +25,7 @@
         </svg>
       </div>
       <span class="text-sm font-bold tracking-wider text-white" style="font-family:'Outfit',sans-serif">Treebase</span>
-      <span id="branch-badge" class="font-mono text-[10px] px-2.5 py-1 rounded-full border bg-white/5 border-white/10 text-slate-400 font-semibold tracking-wide">—</span>
+      <span id="branch-badge" class="font-mono text-xs px-2.5 py-1 rounded border bg-[#333333] border-[#444] text-[#cccccc] font-semibold tracking-wide">—</span>
     </div>
 
     <div class="flex items-center gap-3">
@@ -49,14 +49,12 @@
   <!-- ── Main layout ── -->
   <div class="flex flex-1 overflow-hidden relative">
     
-    <!-- Background glowing orbs (optional aesthetics) -->
-    <div class="absolute top-[-100px] left-[-100px] w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <!-- Background glowing orbs (removed for clean look) -->
 
     <!-- Files sidebar -->
-    <aside id="files-panel" class="relative z-10 shrink-0 border-r border-white/5 flex flex-col bg-slate-900/30 backdrop-blur-md" style="width:200px;min-width:140px;max-width:320px;">
-      <div class="flex items-center justify-between px-4 py-3 border-b border-white/5">
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Explorer</span>
+    <aside id="files-panel" class="relative z-10 shrink-0 border-r border-[#333333] flex flex-col bg-[#252526]" style="width:200px;min-width:140px;max-width:320px;">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-transparent">
+        <span class="text-xs font-semibold uppercase tracking-widest text-[#cccccc]">Explorer</span>
         <button onclick="addFile()" class="text-indigo-400 hover:text-indigo-300 transform hover:scale-110 text-lg leading-none transition-all duration-200" title="New File">+</button>
       </div>
       <ul id="file-list" class="flex-1 overflow-y-auto py-2 px-1"></ul>
@@ -68,8 +66,8 @@
     <main class="relative z-10 flex-1 flex flex-col overflow-hidden min-w-0 bg-transparent">
 
       <!-- Toolbar -->
-      <div class="flex items-center justify-between px-4 py-2 border-b border-white/5 shrink-0 bg-slate-900/20 backdrop-blur-sm">
-        <span id="active-filename" class="text-[11px] font-mono text-indigo-200/70 font-medium">no file open</span>
+      <div class="flex items-center justify-between px-4 py-2 shrink-0 bg-[#1e1e1e]">
+        <span id="active-filename" class="text-sm font-mono text-[#007acc] font-medium">no file open</span>
         <div class="flex items-center gap-2">
           <button onclick="doUndo()" title="Undo" class="btn-icon">↩</button>
           <button onclick="doRedo()" title="Redo" class="btn-icon">↪</button>
@@ -86,29 +84,29 @@
       <div class="resize-y relative z-20" id="resize-terminal"></div>
 
       <!-- Terminal -->
-      <div id="terminal-panel" class="border-t border-white/5 flex flex-col shrink-0 bg-slate-950/80 backdrop-blur-md" style="height:180px;min-height:60px;max-height:400px;">
-        <div class="flex items-center justify-between px-5 py-2 border-b border-white/5 bg-slate-900/60">
-          <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase flex items-center gap-2">
-            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div> Terminal 
+      <div id="terminal-panel" class="border-t border-[#333333] flex flex-col shrink-0 bg-[#1e1e1e]" style="height:180px;min-height:60px;max-height:400px;">
+        <div class="flex items-center justify-between px-5 py-2 border-b border-[#333333] bg-[#252526]">
+          <span class="text-xs font-semibold tracking-widest text-[#cccccc] uppercase flex items-center gap-2">
+            Terminal 
           </span>
-          <button onclick="clearTerminal()" class="text-[10px] font-mono text-slate-500 hover:text-slate-300 transition-colors">clear</button>
+          <button onclick="clearTerminal()" class="text-xs font-mono text-[#cccccc] hover:text-white transition-colors">clear</button>
         </div>
-        <pre id="terminal" class="flex-1 overflow-y-auto px-5 py-3 text-[11px] font-mono leading-loose whitespace-pre-wrap text-slate-300 selection:bg-indigo-500/40"></pre>
+        <pre id="terminal" class="flex-1 overflow-y-auto px-5 py-3 text-sm font-mono leading-loose whitespace-pre-wrap text-[#cccccc] selection:bg-[#007acc]/40"></pre>
       </div>
     </main>
 
     <div class="resize-x relative z-20" id="resize-activity"></div>
 
     <!-- Right: activity + branches -->
-    <aside id="activity-panel" class="relative z-10 shrink-0 border-l border-white/5 flex flex-col bg-slate-900/30 backdrop-blur-md" style="width:280px;min-width:200px;max-width:400px;">
-      <div class="px-4 py-3 border-b border-white/5">
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Activity Log</span>
-        <p class="text-[9px] mt-1 text-slate-500 font-medium">Click to checkout timeline</p>
+    <aside id="activity-panel" class="relative z-10 shrink-0 border-l border-[#333333] flex flex-col bg-[#252526]" style="width:280px;min-width:200px;max-width:400px;">
+      <div class="px-4 py-3">
+        <span class="text-xs font-semibold uppercase tracking-widest text-[#cccccc]">Activity Log</span>
+        <p class="text-xs mt-1 text-[#858585]">Click to checkout timeline</p>
       </div>
       <ul id="activity-log" class="overflow-y-auto py-2 px-1" style="flex:1;min-height:0"></ul>
       
-      <div class="border-t border-white/5 px-4 py-4 shrink-0 bg-slate-900/20 backdrop-blur-md">
-        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Branches</span>
+      <div class="px-4 py-4 shrink-0 bg-[#252526]">
+        <span class="text-xs font-semibold uppercase tracking-widest text-[#cccccc]">Branches</span>
         <ul id="branch-list" class="mt-3 space-y-1"></ul>
       </div>
     </aside>
@@ -116,36 +114,36 @@
 
   <!-- ── Tree modal ── -->
   <div id="tree-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-0">
-    <div class="glass-modal rounded-2xl flex flex-col transform scale-95 transition-all duration-300" style="width:90%;max-width:960px;height:85vh">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0 bg-white/[0.02]">
+    <div class="glass-modal rounded flex flex-col transform scale-95 transition-all duration-300" style="width:90%;max-width:960px;height:85vh">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#333333] shrink-0 bg-[#252526]">
         <div class="flex items-center gap-3">
           <span class="text-sm font-semibold text-white tracking-wide">Commit Tree</span>
-          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold shadow-[0_0_10px_rgba(99,102,241,0.2)]">DFS Traversal · N-ary Tree</span>
-          <span id="tree-file-label" class="text-[10px] font-mono px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-slate-400"></span>
+          <span class="text-xs font-mono px-2 py-0.5 rounded bg-[#3c3c3c] text-white border border-[#454545] font-medium">DFS Traversal · N-ary Tree</span>
+          <span id="tree-file-label" class="text-xs font-mono px-2 py-0.5 rounded border border-[#454545] bg-[#3c3c3c] text-[#cccccc]"></span>
         </div>
-        <button onclick="closeTree()" class="text-slate-400 hover:text-white hover:bg-white/10 text-xl w-8 h-8 flex items-center justify-center rounded-lg transition-colors">×</button>
+        <button onclick="closeTree()" class="text-[#cccccc] hover:text-white hover:bg-[#333333] text-xl w-8 h-8 flex items-center justify-center rounded transition-colors">×</button>
       </div>
       <div id="tree-content" class="flex-1 overflow-auto p-8 relative flex flex-col items-center"></div>
-      <div class="px-6 py-3 border-t border-white/10 shrink-0 bg-white/[0.02] flex items-center gap-4">
-        <span class="text-[10px] font-medium text-slate-400 flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-indigo-500"></div> Current HEAD</span>
-        <span class="text-[10px] font-medium text-slate-500">·</span>
-        <span class="text-[10px] font-medium text-slate-400">Branches visually diverge on forks</span>
+      <div class="px-6 py-3 border-t border-[#333333] shrink-0 bg-[#252526] flex items-center gap-4">
+        <span class="text-xs font-medium text-[#cccccc] flex items-center gap-2"><div class="w-2 h-2 rounded bg-[#007acc]"></div> Current HEAD</span>
+        <span class="text-xs font-medium text-[#858585]">·</span>
+        <span class="text-xs font-medium text-[#cccccc]">Branches visually diverge on forks</span>
       </div>
     </div>
   </div>
 
   <!-- ── History modal ── -->
   <div id="history-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-8 bg-black/60 backdrop-blur-sm transition-all duration-300 opacity-0">
-    <div class="glass-modal rounded-2xl flex flex-col transform scale-95 transition-all duration-300" style="width:720px;max-width:95%;height:75vh">
-      <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 shrink-0 bg-white/[0.02]">
+    <div class="glass-modal rounded flex flex-col transform scale-95 transition-all duration-300" style="width:720px;max-width:95%;height:75vh">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-[#333333] shrink-0 bg-[#252526]">
         <div class="flex items-center gap-3">
           <span class="text-sm font-semibold text-white tracking-wide">File History</span>
-          <span id="history-filename" class="text-[10px] font-mono px-2.5 py-1 rounded-full border border-white/10 bg-white/5 text-slate-400 font-medium"></span>
+          <span id="history-filename" class="text-xs font-mono px-2.5 py-1 rounded border border-[#454545] bg-[#3c3c3c] text-[#cccccc] font-medium"></span>
         </div>
-        <button onclick="closeHistory()" class="text-slate-400 hover:text-white hover:bg-white/10 text-xl w-8 h-8 flex items-center justify-center rounded-lg transition-colors">×</button>
+        <button onclick="closeHistory()" class="text-[#cccccc] hover:text-white hover:bg-[#333333] text-xl w-8 h-8 flex items-center justify-center rounded transition-colors">×</button>
       </div>
-      <div class="px-6 py-2.5 border-b border-white/5 shrink-0 bg-white/[0.01]">
-        <p class="text-[11px] font-medium text-slate-500">Timeline of all modifications across all branches. Click any snapshot to restore it.</p>
+      <div class="px-6 py-2.5 border-b border-[#333333] shrink-0 bg-[#1e1e1e]">
+        <p class="text-sm font-medium text-[#cccccc]">Timeline of all modifications across all branches. Click any snapshot to restore it.</p>
       </div>
       <div id="history-list" class="flex-1 overflow-y-auto python-scrollbar"></div>
     </div>
