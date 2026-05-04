@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Treebase — Deep Dive: All Algorithms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+:root {
+  --bg:#F8F7F4;--bg2:#FFFFFF;--bg3:#F1F0EC;--border:#E8E6E0;--border2:#D4D1C8;
+  --ink:#1A1917;--ink2:#3D3A35;--ink3:#6B6760;--ink4:#9E9B96;
+  --accent:#1B6B3A;--accent2:#25924F;--accent-bg:#EBF5EF;--accent-border:#B8DFC7;
+  --amber:#92400E;--amber-bg:#FEF3C7;--blue:#1D4ED8;--blue-bg:#EFF6FF;--blue-border:#BFDBFE;
+  --red:#991B1B;--red-bg:#FEF2F2;--red-border:#FECACA;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'Fira Code','Courier New',monospace;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.10),0 4px 12px rgba(0,0,0,.06);
+  --radius:12px;--radius-sm:8px;--radius-xs:5px;--sidebar-w:264px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+::selection{background:var(--accent-bg);color:var(--accent);}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+
+#progress{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),#34D399);z-index:9999;transform-origin:left;transform:scaleX(0);transition:transform .1s linear;}
+
+.layout{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;overflow-y:auto;z-index:100;}
+.sidebar::-webkit-scrollbar{width:3px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.sidebar-header{padding:28px 24px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-logo-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent) 0%,#34D399 100%);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;box-shadow:0 2px 8px rgba(27,107,58,.25);}
+.sidebar-logo-text{font-family:var(--serif);font-size:20px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.5px;}
+.sidebar-logo-text em{color:var(--accent);font-style:italic;}
+.sidebar-nav{padding:20px 14px;flex:1;}
+.nav-group{margin-bottom:24px;}
+.nav-group-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4);padding:0 10px;margin-bottom:6px;display:block;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-xs);text-decoration:none;color:var(--ink3);font-size:13px;font-weight:500;transition:all .15s;cursor:pointer;border:none;background:none;width:100%;text-align:left;}
+.nav-link:hover{background:var(--bg3);color:var(--ink);}
+.nav-link.active{background:var(--accent-bg);color:var(--accent);font-weight:600;}
+.nav-num{font-family:var(--mono);font-size:10px;color:var(--ink4);min-width:22px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;text-align:center;flex-shrink:0;}
+.nav-link.active .nav-num{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);}
+.sidebar-footer{padding:16px 14px;border-top:1px solid var(--border);flex-shrink:0;}
+.sidebar-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--radius-xs);text-decoration:none;font-size:12.5px;font-weight:600;font-family:var(--sans);transition:all .18s;margin-bottom:8px;}
+.sidebar-btn-secondary{background:var(--bg3);color:var(--ink2);border:1px solid var(--border);}
+.sidebar-btn-secondary:hover{background:var(--border);color:var(--ink);}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);min-height:100vh;flex:1;}
+
+/* HERO */
+.hero{background:var(--bg2);border-bottom:1px solid var(--border);padding:64px 64px 56px;position:relative;overflow:hidden;}
+.hero-grid-bg{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.35;-webkit-mask-image:radial-gradient(ellipse 80% 100% at 100% 0%,rgba(0,0,0,.5) 0%,transparent 70%);mask-image:radial-gradient(ellipse 80% 100% at 100% 0%,rgba(0,0,0,.5) 0%,transparent 70%);}
+.hero-eyebrow{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px;position:relative;}
+.hero-eyebrow::before{content:'';display:block;width:20px;height:1px;background:var(--accent);}
+.hero h1{font-family:var(--serif);font-size:clamp(36px,4vw,56px);font-weight:800;line-height:1.08;letter-spacing:-1.5px;color:var(--ink);max-width:680px;margin-bottom:18px;position:relative;}
+.hero h1 em{color:var(--accent);font-style:italic;}
+.hero-desc{font-size:15px;color:var(--ink2);max-width:520px;line-height:1.8;font-weight:300;position:relative;}
+.hero-toc{display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;position:relative;}
+.toc-pill{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--bg3);border:1.5px solid var(--border);border-radius:20px;font-size:12.5px;font-weight:600;color:var(--ink2);text-decoration:none;transition:all .22s;box-shadow:var(--shadow-sm);}
+.toc-pill:hover{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);transform:translateY(-1px);box-shadow:0 4px 12px rgba(27,107,58,.12);}
+.toc-pill.green{background:linear-gradient(135deg,var(--accent) 0%,#34D399 100%);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(27,107,58,.3);}
+.toc-pill.green:hover{background:linear-gradient(135deg,var(--accent2) 0%,#10B981 100%);transform:translateY(-2px);box-shadow:0 6px 18px rgba(27,107,58,.4);}
+
+/* SECTION */
+.section{padding:64px 64px;border-bottom:1px solid var(--border);}
+.section.white{background:var(--bg2);}
+.eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.eye-tag{font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:3px 10px;border-radius:var(--radius-xs);}
+.eye-line{flex:1;height:1px;background:var(--border);max-width:48px;}
+.sec-title{font-family:var(--serif);font-size:clamp(26px,3.2vw,40px);font-weight:800;line-height:1.1;letter-spacing:-1px;color:var(--ink);margin-bottom:8px;}
+.sec-sub{font-size:14px;color:var(--ink4);margin-bottom:32px;padding-bottom:28px;border-bottom:1px solid var(--border);}
+.prose{font-size:15px;color:var(--ink2);line-height:1.88;max-width:820px;}
+.prose p+p{margin-top:16px;}
+.prose strong{color:var(--ink);font-weight:600;}
+.prose code{font-family:var(--mono);font-size:12.5px;background:var(--amber-bg);border:1px solid #FDE68A;padding:1px 6px;border-radius:4px;color:var(--amber);}
+.callout{margin:24px 0;padding:18px 22px;border-left:3px solid var(--accent);background:var(--accent-bg);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:14.5px;color:var(--accent);line-height:1.75;}
+.callout-amber{border-left-color:#D97706;background:var(--amber-bg);color:#92400E;}
+.callout-blue{border-left-color:var(--blue);background:var(--blue-bg);color:var(--blue);}
+.callout-red{border-left-color:#DC2626;background:var(--red-bg);color:var(--red);}
+
+/* TREE DIAGRAM */
+.tree-diagram{margin:28px 0;background:linear-gradient(145deg,#111827 0%,#1A1F2E 100%);border-radius:var(--radius);padding:36px 40px;font-family:var(--mono);font-size:13.5px;line-height:2;color:#D4D4D4;overflow-x:auto;position:relative;border:1px solid rgba(255,255,255,.08);box-shadow:0 8px 32px rgba(0,0,0,.18);}
+.tree-diagram::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 80% 20%,rgba(99,102,241,.06) 0%,transparent 70%);border-radius:var(--radius);pointer-events:none;}
+.tree-diagram .node{display:inline-block;padding:5px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);font-size:12.5px;font-weight:600;transition:all .2s;cursor:default;}
+.tree-diagram .node:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3);}
+.tree-diagram .node.base{background:rgba(99,102,241,.2);border-color:rgba(99,102,241,.45);color:#A5B4FC;box-shadow:0 0 0 0 rgba(99,102,241,0);}
+.tree-diagram .node.base:hover{box-shadow:0 0 16px rgba(99,102,241,.3);}
+.tree-diagram .node.mine{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.4);color:#86EFAC;}
+.tree-diagram .node.mine:hover{box-shadow:0 0 16px rgba(34,197,94,.25);}
+.tree-diagram .node.theirs{background:rgba(234,179,8,.15);border-color:rgba(234,179,8,.4);color:#FDE047;}
+.tree-diagram .node.theirs:hover{box-shadow:0 0 16px rgba(234,179,8,.2);}
+.tree-diagram .node.lca{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.5);color:#FCA5A5;font-weight:700;box-shadow:0 0 12px rgba(239,68,68,.15);}
+.tree-diagram .node.lca:hover{box-shadow:0 0 20px rgba(239,68,68,.3);}
+.tree-diagram .node.merge{background:rgba(168,85,247,.2);border-color:rgba(168,85,247,.5);color:#D8B4FE;}
+.tree-diagram .node.merge:hover{box-shadow:0 0 16px rgba(168,85,247,.25);}
+.tree-diagram .connector{color:rgba(255,255,255,.3);}
+.tree-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);color:rgba(255,255,255,.4);}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* STEP CARDS — enhanced */
+.step-list{margin:28px 0;display:flex;flex-direction:column;gap:0;}
+.step{display:flex;gap:0;position:relative;}
+.step:not(:last-child)::before{content:'';position:absolute;left:19px;top:44px;bottom:0;width:2px;background:linear-gradient(to bottom,var(--accent-border),transparent);z-index:0;}
+.step-num{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent) 0%,#34D399 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;flex-shrink:0;margin-top:0;position:relative;z-index:1;box-shadow:0 2px 12px rgba(27,107,58,.35);}
+.step-body{padding:0 0 32px 20px;flex:1;}
+.step-title{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--ink);margin-bottom:8px;line-height:1.3;}
+.step-desc{font-size:14px;color:var(--ink3);line-height:1.75;}
+.step-desc code{font-family:var(--mono);font-size:12px;background:var(--amber-bg);border:1px solid #FDE68A;padding:1px 5px;border-radius:4px;color:var(--amber);}
+
+/* CODE BLOCK */
+.code-block{margin:24px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2D2D2D;box-shadow:var(--shadow-md);max-width:900px;}
+.code-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#1E1E1E;border-bottom:1px solid rgba(255,255,255,.06);}
+.dots{display:flex;gap:6px;}.dots span{width:10px;height:10px;border-radius:50%;}
+.dot-r{background:#FF5F57;}.dot-y{background:#FEBC2E;}.dot-g{background:#28C840;}
+.code-file{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3);}
+pre{background:#1A1A1A;padding:22px 24px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.9;color:#D4D4D4;}
+.k{color:#569CD6;}.t{color:#4EC9B0;}.f{color:#DCDCAA;}.s{color:#CE9178;}.c{color:#6A9955;font-style:italic;}.n{color:#9CDCFE;}.nm{color:#B5CEA8;}.p{color:#D4D4D4;}.kw{color:#C586C0;}
+
+/* MERGE COLUMNS */
+.merge-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:24px 0;}
+.merge-col{border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+.merge-col-head{padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
+.merge-col-head.base{background:#EEF2FF;color:#4338CA;}
+.merge-col-head.mine{background:#F0FDF4;color:#166534;}
+.merge-col-head.theirs{background:#FEFCE8;color:#713F12;}
+.merge-col-body{background:var(--bg2);padding:14px;}
+.merge-line{font-family:var(--mono);font-size:12px;line-height:1.8;padding:2px 6px;border-radius:3px;}
+.merge-line.add{background:#DCFCE7;color:#166534;}
+.merge-line.del{background:#FEE2E2;color:#991B1B;text-decoration:line-through;opacity:.7;}
+.merge-line.conf{background:#FEF3C7;color:#92400E;}
+.merge-line.normal{color:var(--ink3);}
+
+/* RESULT BOX */
+.result-box{margin:24px 0;border-radius:var(--radius-sm);border:1px solid var(--border);overflow:hidden;max-width:900px;}
+.result-box-head{padding:10px 16px;background:var(--ink);font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:8px;}
+.result-box-head .dot{width:8px;height:8px;border-radius:50%;}
+.result-box-body{background:#0D1117;padding:20px 24px;font-family:var(--mono);font-size:13px;line-height:1.9;}
+.r-normal{color:#D4D4D4;}
+.r-add{color:#4ADE80;}
+.r-conf-head{color:#F87171;font-weight:600;}
+.r-conf-sep{color:#FACC15;}
+.r-mine{color:#86EFAC;background:rgba(74,222,128,.08);display:block;padding:0 4px;}
+.r-theirs{color:#FDE047;background:rgba(250,204,21,.08);display:block;padding:0 4px;}
+
+/* BADGE */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-family:var(--mono);font-size:10.5px;font-weight:600;}
+.b-green{background:#DCFCE7;color:#166534;}.b-amber{background:#FEF3C7;color:#92400E;}.b-blue{background:var(--blue-bg);color:var(--blue);}
+
+/* BACK LINK */
+.back-link{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-xs);background:var(--bg3);border:1px solid var(--border);font-size:12.5px;font-weight:600;color:var(--ink2);text-decoration:none;transition:all .18s;}
+.back-link:hover{background:var(--border);color:var(--ink);}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:36px 0;}
+
+/* ANCHOR OFFSET for fixed nav */
+.anchor-target{scroll-margin-top:80px;}
+
+/* SUMMARY TABLE */
+table{width:100%;border-collapse:collapse;background:var(--bg2);max-width:820px;}
+thead tr{background:var(--ink);}
+thead th{padding:12px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.55);text-align:left;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--bg3);}
+td{padding:12px 16px;font-size:13px;color:var(--ink2);vertical-align:middle;}
+td:first-child{color:var(--ink);font-weight:500;}
+td code{font-family:var(--mono);font-size:11.5px;background:var(--bg3);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--amber);}
+.tbl-wrap{border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);margin:24px 0;}
+
+/* ARCH FLOW (inline tree ascii) */
+.ascii-tree{background:var(--ink);border-radius:var(--radius);padding:28px 32px;font-family:var(--mono);font-size:13px;line-height:2;color:#D4D4D4;overflow-x:auto;white-space:pre;margin:24px 0;}
+
+/* REVEAL ANIM */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.reveal{animation:fadeUp .5s ease both;}
+  </style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <a class="sidebar-logo" href="index.html">
+        <div class="sidebar-logo-icon">🌳</div>
+        <div class="sidebar-logo-text">Tree<em>base</em></div>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <span class="nav-group-label">Deep Dive</span>
+        <a class="nav-link active" href="#nary">
+          <span class="nav-num">01</span> N-ary Tree + DFS
+        </a>
+        <a class="nav-link" href="#hashmap">
+          <span class="nav-num">02</span> Hash Map Lookups
+        </a>
+        <a class="nav-link" href="#deque">
+          <span class="nav-num">03</span> Undo/Redo Deques
+        </a>
+        <a class="nav-link" href="#lca">
+          <span class="nav-num">04</span> LCA Algorithm
+        </a>
+        <a class="nav-link" href="#merge">
+          <span class="nav-num">05</span> 3-Way Merge
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a class="sidebar-btn sidebar-btn-secondary" href="https://treebase.onrender.com" target="_blank">🚀 Open Treebase App</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HERO -->
+    <div class="hero reveal">
+      <div class="hero-grid-bg"></div>
+      <div class="hero-eyebrow">Deep Dive — All Algorithms</div>
+      <h1>How <em>Treebase</em> algorithms actually work</h1>
+      <p class="hero-desc">Step-by-step walkthroughs of all five core algorithms powering Treebase — N-ary Tree DFS, Hash Map O(1) lookups, Deque-based Undo/Redo, LCA detection, and 3-Way Merge — with real visual diagrams, worked examples, and detailed explanations.</p>
+      <div class="hero-toc">
+        <a class="toc-pill green" href="#nary">① N-ary Tree + DFS</a>
+        <a class="toc-pill green" href="#hashmap">② Hash Map Lookups</a>
+        <a class="toc-pill green" href="#deque">③ Undo/Redo Deques</a>
+        <a class="toc-pill green" href="#lca">④ LCA Algorithm</a>
+        <a class="toc-pill green" href="#merge">⑤ 3-Way Merge</a>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 1 — N-ARY TREE + DFS                                  -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="section white anchor-target" id="nary">
+      <div class="eyebrow"><div class="eye-tag">Algorithm 01</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">N-ary Tree + DFS Traversal</h2>
+      <p class="sec-sub">How every commit is stored, branched, and visualised as a live Mermaid diagram</p>
+
+      <div class="prose">
+        <p>At the core of Treebase is a single data structure: an <strong>N-ary tree</strong> of <code>CommitNode</code> objects. Each node holds the commit message, content snapshot, branch name, timestamp, and a list of <em>children</em>. Because a node can have <strong>multiple children</strong>, the tree naturally represents branches — a branch is simply a child that grows in a different direction from the trunk.</p>
+        <p>To generate the visual commit diagram, Treebase runs a <strong>Depth-First Search (DFS)</strong> starting from the root commit, visiting every node exactly once and emitting Mermaid.js syntax along the way — O(N) time and space.</p>
+      </div>
+
+      <!-- TREE DIAGRAM -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">Worked Example — A 3-Branch Repository</h3>
+      <div class="prose"><p>You make 3 commits on <code>main</code>, create a <code>feature</code> branch after C2, and later create a <code>hotfix</code> branch from C1. Here's how the N-ary tree looks in memory:</p></div>
+
+      <div class="tree-diagram" style="padding:36px 40px;">
+        <div style="font-family:'Fira Code',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(74,222,128,.5);margin-bottom:24px;">▶ N-ary Tree in memory — children[] allows any number of branches</div>
+
+        <!-- Root -->
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:0;">
+          <!-- C0 -->
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="node base" style="min-width:80px;text-align:center;">C0 · Init</span>
+            <span style="color:rgba(165,180,252,.4);font-size:11px;font-family:'Fira Code',monospace;">root · children = [C1]</span>
+          </div>
+          <div style="margin-left:38px;color:rgba(255,255,255,.2);font-size:18px;line-height:1.2;">│</div>
+
+          <!-- C1 -->
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="node base" style="min-width:80px;text-align:center;">C1 · Add auth</span>
+            <span style="color:rgba(165,180,252,.4);font-size:11px;font-family:'Fira Code',monospace;">children = [C2, H1]  ← two children = branch fork</span>
+          </div>
+          <div style="margin-left:38px;display:flex;gap:60px;font-size:18px;line-height:1.2;color:rgba(255,255,255,.2);">
+            <span>│</span><span style="margin-left:22px;">│</span>
+          </div>
+
+          <!-- Split row -->
+          <div style="display:flex;align-items:flex-start;gap:40px;">
+            <!-- main branch -->
+            <div style="display:flex;flex-direction:column;align-items:flex-start;gap:0;">
+              <span class="node mine" style="min-width:90px;text-align:center;">C2 · Fix bug</span>
+              <div style="margin-left:42px;color:rgba(134,239,172,.3);font-size:18px;line-height:1.2;">│</div>
+              <span class="node mine" style="min-width:90px;text-align:center;">C3 · Tests ✓</span>
+              <div style="margin-top:8px;font-family:'Fira Code',monospace;font-size:10.5px;color:#86EFAC;opacity:.7;">⎇ main  HEAD→</div>
+            </div>
+
+            <div style="padding-top:10px;display:flex;flex-direction:column;gap:0;align-items:flex-start;">
+              <span class="node theirs" style="min-width:100px;text-align:center;">H1 · Patch XSS</span>
+              <div style="margin-top:8px;font-family:'Fira Code',monospace;font-size:10.5px;color:#FDE047;opacity:.7;">⎇ hotfix</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div style="margin-top:28px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:20px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;"><span class="node base" style="font-size:10px;padding:2px 8px;">Cx</span><span style="font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace;">shared / root</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span class="node mine" style="font-size:10px;padding:2px 8px;">Cx</span><span style="font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace;">main branch</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span class="node theirs" style="font-size:10px;padding:2px 8px;">Hx</span><span style="font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace;">hotfix branch</span></div>
+        </div>
+      </div>
+
+      <!-- DFS walkthrough -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:40px 0 20px;letter-spacing:-.5px;">DFS Traversal — How the Mermaid Diagram is Generated</h3>
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Start at <code>root</code> — emit C0</div>
+            <div class="step-desc">DFS begins at <code>self.root</code>. It adds <code>C0["Init · main · ab1c"]</code> to the Mermaid lines, marks C0 visited, then iterates its <code>children[]</code>.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Recurse into C1 → emit edge <code>C0 → C1</code></div>
+            <div class="step-desc">C0 has one child: C1. DFS emits <code>C0 --> C1</code> then recurses into C1. C1 has <strong>two</strong> children: C2 and H1 — this is where the diagram visually forks.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Fork — recurse left into C2 → C3 first</div>
+            <div class="step-desc">DFS goes depth-first: it fully explores the <code>main</code> subtree (C2 → C3) before backtracking to visit H1. This is why the <code>visited</code> set is critical — merge commits would otherwise cause infinite loops.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Backtrack → emit H1, then style HEAD</div>
+            <div class="step-desc">After C3, DFS backtracks to C1's second child H1 and emits it. Finally it adds a <code>style</code> directive on the current HEAD node giving it the purple fill you see in the app.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:8px;"><strong>Why DFS, not BFS?</strong> DFS naturally groups commits by branch in the output — the <code>main</code> chain appears contiguous in the Mermaid source, making the layout cleaner. BFS would interleave commits from different branches, creating visual clutter.</div>
+
+      <!-- DFS STEP TRACE — visual, no code -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">DFS Visit Order — Traced Step by Step</h3>
+      <div class="prose"><p>Using the 3-branch repository above, here is the exact order in which DFS visits each node, and what it emits into the diagram output at each step:</p></div>
+
+      <div style="margin:24px 0;display:flex;flex-direction:column;gap:8px;">
+        <div style="display:grid;grid-template-columns:40px 1fr 1fr;gap:0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+          <div style="background:var(--ink);padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);">Step</div>
+          <div style="background:var(--ink);padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);">Node visited</div>
+          <div style="background:var(--ink);padding:10px 14px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.4);">What gets emitted</div>
+          <!-- row 1 -->
+          <div style="background:var(--bg2);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);">1</div>
+          <div style="background:var(--bg2);padding:12px 14px;font-size:13px;color:var(--ink);border-top:1px solid var(--border);border-left:1px solid var(--border);"><strong>C0</strong> — Init · root</div>
+          <div style="background:var(--bg2);padding:12px 14px;font-size:12.5px;color:var(--ink3);font-family:var(--mono);border-top:1px solid var(--border);border-left:1px solid var(--border);">Node declaration: C0["Init · main"]</div>
+          <!-- row 2 -->
+          <div style="background:var(--bg3);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);">2</div>
+          <div style="background:var(--bg3);padding:12px 14px;font-size:13px;color:var(--ink);border-top:1px solid var(--border);border-left:1px solid var(--border);">Edge C0 → C1</div>
+          <div style="background:var(--bg3);padding:12px 14px;font-size:12.5px;color:var(--ink3);font-family:var(--mono);border-top:1px solid var(--border);border-left:1px solid var(--border);">Arrow: C0 ──→ C1</div>
+          <!-- row 3 -->
+          <div style="background:var(--bg2);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);">3</div>
+          <div style="background:var(--bg2);padding:12px 14px;font-size:13px;color:var(--ink);border-top:1px solid var(--border);border-left:1px solid var(--border);"><strong>C1</strong> — Add auth · 2 children!</div>
+          <div style="background:var(--bg2);padding:12px 14px;font-size:12.5px;color:var(--ink3);font-family:var(--mono);border-top:1px solid var(--border);border-left:1px solid var(--border);">Node declaration: C1["Add auth · main"]</div>
+          <!-- row 4 -->
+          <div style="background:var(--bg3);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);">4</div>
+          <div style="background:var(--bg3);padding:12px 14px;font-size:13px;color:var(--ink);border-top:1px solid var(--border);border-left:1px solid var(--border);">Recurse into C2 (first child of C1)</div>
+          <div style="background:var(--bg3);padding:12px 14px;font-size:12.5px;color:var(--ink3);font-family:var(--mono);border-top:1px solid var(--border);border-left:1px solid var(--border);">Arrow C1 ──→ C2, then node C2["Fix bug"]</div>
+          <!-- row 5 -->
+          <div style="background:var(--bg2);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);">5</div>
+          <div style="background:var(--bg2);padding:12px 14px;font-size:13px;color:var(--ink);border-top:1px solid var(--border);border-left:1px solid var(--border);"><strong>C3</strong> — Tests ✓ (main branch fully explored)</div>
+          <div style="background:var(--bg2);padding:12px 14px;font-size:12.5px;color:var(--ink3);font-family:var(--mono);border-top:1px solid var(--border);border-left:1px solid var(--border);">Arrow C2 ──→ C3, then node C3["Tests ✓"]</div>
+          <!-- row 6 -->
+          <div style="background:var(--accent-bg);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);">6</div>
+          <div style="background:var(--accent-bg);padding:12px 14px;font-size:13px;color:var(--accent);border-top:1px solid var(--border);border-left:1px solid var(--border);"><strong>Backtrack</strong> → C1's second child: H1 (hotfix)</div>
+          <div style="background:var(--accent-bg);padding:12px 14px;font-size:12.5px;color:var(--accent);font-family:var(--mono);border-top:1px solid var(--border);border-left:1px solid var(--border);">Arrow C1 ──→ H1, then node H1["Patch XSS"]</div>
+          <!-- row 7 -->
+          <div style="background:var(--bg3);padding:12px 14px;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);border-top:1px solid var(--border);">7</div>
+          <div style="background:var(--bg3);padding:12px 14px;font-size:13px;color:var(--ink);border-top:1px solid var(--border);border-left:1px solid var(--border);">Style current HEAD node (purple fill)</div>
+          <div style="background:var(--bg3);padding:12px 14px;font-size:12.5px;color:var(--ink3);font-family:var(--mono);border-top:1px solid var(--border);border-left:1px solid var(--border);">style C3 fill:#6366f1,color:#fff</div>
+        </div>
+      </div>
+
+      <div class="tbl-wrap" style="margin-top:28px;">
+        <table>
+          <thead><tr><th>Operation</th><th>Complexity</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>DFS traversal</td><td><span class="badge b-amber">O(N)</span></td><td>Visits every commit node exactly once</td></tr>
+            <tr><td>visited set lookup</td><td><span class="badge b-green">O(1)</span></td><td>Hash set — prevents DAG infinite loops</td></tr>
+            <tr><td>Space (call stack)</td><td><span class="badge b-amber">O(N)</span></td><td>Depth of recursion = depth of tree</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 2 — HASH MAP LOOKUPS                                  -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="section anchor-target" id="hashmap">
+      <div class="eyebrow"><div class="eye-tag">Algorithm 02</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Hash Map — O(1) Checkout &amp; Branch Switching</h2>
+      <p class="sec-sub">Why two parallel dictionaries make every checkout instant, no matter how large the repo</p>
+
+      <div class="prose">
+        <p>Treebase maintains two hash maps alongside the N-ary tree: <code>commit_map{id → CommitNode}</code> and <code>branches{name → CommitNode}</code>. Without these maps, checking out any commit would require walking the entire tree — O(N) DFS. With them, it's a single dictionary key lookup — <strong>O(1) always</strong>, whether you have 5 commits or 500,000.</p>
+      </div>
+
+      <!-- Visual hash map diagram -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">What the two maps look like after 4 commits</h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;">
+        <!-- commit_map -->
+        <div style="border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
+          <div style="background:var(--ink);padding:12px 18px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#DCDCAA;display:inline-block;"></span>commit_map  <span style="color:rgba(255,255,255,.2);">— O(1) checkout by ID</span>
+          </div>
+          <div style="background:#0D1117;padding:16px 20px;font-family:var(--mono);font-size:12.5px;line-height:2.2;">
+            <div><span style="color:#6A9955;">{ </span></div>
+            <div style="padding-left:16px;"><span style="color:#9CDCFE;">"ab1c"</span><span style="color:#D4D4D4;">: </span><span style="color:#4EC9B0;">CommitNode</span><span style="color:#D4D4D4;">(</span><span style="color:#CE9178;">"Init"</span><span style="color:#D4D4D4;">),</span></div>
+            <div style="padding-left:16px;"><span style="color:#9CDCFE;">"7f3d"</span><span style="color:#D4D4D4;">: </span><span style="color:#4EC9B0;">CommitNode</span><span style="color:#D4D4D4;">(</span><span style="color:#CE9178;">"Add auth"</span><span style="color:#D4D4D4;">),</span></div>
+            <div style="padding-left:16px;"><span style="color:#9CDCFE;">"2e9a"</span><span style="color:#D4D4D4;">: </span><span style="color:#4EC9B0;">CommitNode</span><span style="color:#D4D4D4;">(</span><span style="color:#CE9178;">"Fix bug"</span><span style="color:#D4D4D4;">),</span></div>
+            <div style="padding-left:16px;"><span style="color:#9CDCFE;">"c41b"</span><span style="color:#D4D4D4;">: </span><span style="color:#4EC9B0;">CommitNode</span><span style="color:#D4D4D4;">(</span><span style="color:#CE9178;">"Tests ✓"</span><span style="color:#D4D4D4;">)</span></div>
+            <div><span style="color:#6A9955;">}</span></div>
+          </div>
+        </div>
+        <!-- branches -->
+        <div style="border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);">
+          <div style="background:var(--ink);padding:12px 18px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.45);display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#C586C0;display:inline-block;"></span>branches  <span style="color:rgba(255,255,255,.2);">— O(1) branch checkout</span>
+          </div>
+          <div style="background:#0D1117;padding:16px 20px;font-family:var(--mono);font-size:12.5px;line-height:2.2;">
+            <div><span style="color:#6A9955;">{ </span></div>
+            <div style="padding-left:16px;"><span style="color:#9CDCFE;">"main"</span><span style="color:#D4D4D4;">:    </span><span style="color:#4EC9B0;">CommitNode</span><span style="color:#D4D4D4;">(</span><span style="color:#CE9178;">"Tests ✓"</span><span style="color:#D4D4D4;">),  </span><span style="color:#6A9955;">← HEAD</span></div>
+            <div style="padding-left:16px;"><span style="color:#9CDCFE;">"feature"</span><span style="color:#D4D4D4;">: </span><span style="color:#4EC9B0;">CommitNode</span><span style="color:#D4D4D4;">(</span><span style="color:#CE9178;">"Fix bug"</span><span style="color:#D4D4D4;">)</span></div>
+            <div><span style="color:#6A9955;">}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose" style="margin-top:8px;">
+        <p><strong>Checkout by commit ID</strong> — <code>commit_map["2e9a"]</code> returns the node in one operation. No tree traversal, no loop. The node holds the full file content snapshot, so restoring it is also instant.</p>
+        <p><strong>Branch switch</strong> — <code>branches["feature"]</code> gives the HEAD commit of that branch directly. Switching branches in Treebase is literally one dictionary lookup.</p>
+      </div>
+
+      <div class="step-list" style="margin-top:28px;">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Every <code>commit()</code> inserts into both structures</div>
+            <div class="step-desc">When you commit, Treebase creates a <code>CommitNode</code>, appends it as a child in the N-ary tree, <em>and</em> inserts the same pointer into <code>commit_map[node.id] = node</code> and updates <code>branches[current_branch] = node</code>. Three O(1) operations.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Checkout — direct lookup, restore content</div>
+            <div class="step-desc"><code>node = commit_map[commit_id]</code> — that's it. Then <code>self.head = node</code> and <code>self.content = node.content</code>. Compare to Git's file system which must read, decompress, and reconstruct the working tree from blob objects.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Why not just walk the tree every time?</div>
+            <div class="step-desc">With N = 10,000 commits and a random target commit ID, DFS takes up to 10,000 steps. The hash map always takes <strong>exactly 1 step</strong>. The benchmark shows this is <strong>416× faster</strong> than a simulated file-system read.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tbl-wrap" style="margin-top:24px;">
+        <table>
+          <thead><tr><th>Approach</th><th>Time</th><th>10k commits</th></tr></thead>
+          <tbody>
+            <tr><td>DFS tree walk (no map)</td><td><span class="badge b-amber">O(N)</span></td><td>up to 10,000 node visits</td></tr>
+            <tr><td style="color:var(--accent);font-weight:600;">Hash map lookup ✓</td><td><span class="badge b-green">O(1)</span></td><td>always 1 step regardless of N</td></tr>
+            <tr><td>Sorted array + binary search</td><td><span class="badge b-amber">O(log N)</span></td><td>~13 comparisons — still worse</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 3 — UNDO / REDO WITH DEQUES                          -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="section white anchor-target" id="deque">
+      <div class="eyebrow"><div class="eye-tag">Algorithm 03</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Undo / Redo with Bounded Deques</h2>
+      <p class="sec-sub">How two LIFO stacks with automatic O(1) eviction give you infinite-feel undo without a memory leak</p>
+
+      <div class="prose">
+        <p>Treebase uses Python's <code>collections.deque(maxlen=50)</code> as a LIFO stack for both the undo and redo buffers. A deque with <code>maxlen</code> set has a crucial property: when you <strong>append to a full deque, it automatically discards the oldest entry</strong> — in O(1). A plain list would require an O(N) shift. The deque gives you bounded memory and constant-time operations simultaneously.</p>
+      </div>
+
+      <!-- Deque visual -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">Visual — Undo Stack after 6 edits (maxlen = 5 shown for clarity)</h3>
+
+      <div style="margin:20px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+        <div style="background:var(--ink);padding:12px 18px;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.45);">undo_stack  deque(maxlen=5)  — newest at RIGHT, pop() from right</div>
+        <div style="background:#0D1117;padding:24px 28px;">
+          <!-- State after 6 edits — oldest dropped -->
+          <div style="display:flex;align-items:center;gap:0;font-family:'Fira Code',monospace;font-size:12.5px;">
+            <div style="padding:8px 0;color:rgba(255,255,255,.2);font-size:11px;margin-right:12px;">oldest<br/>evicted<br/>↓</div>
+            <div style="display:flex;gap:6px;align-items:stretch;">
+              <div style="padding:12px 18px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);border-radius:6px;color:#A5B4FC;text-align:center;min-width:70px;">
+                <div style="font-size:9px;opacity:.6;margin-bottom:4px;">[0]</div>
+                <div>Edit 2</div>
+              </div>
+              <div style="padding:12px 18px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);border-radius:6px;color:#A5B4FC;text-align:center;min-width:70px;">
+                <div style="font-size:9px;opacity:.6;margin-bottom:4px;">[1]</div>
+                <div>Edit 3</div>
+              </div>
+              <div style="padding:12px 18px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);border-radius:6px;color:#A5B4FC;text-align:center;min-width:70px;">
+                <div style="font-size:9px;opacity:.6;margin-bottom:4px;">[2]</div>
+                <div>Edit 4</div>
+              </div>
+              <div style="padding:12px 18px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.35);border-radius:6px;color:#A5B4FC;text-align:center;min-width:70px;">
+                <div style="font-size:9px;opacity:.6;margin-bottom:4px;">[3]</div>
+                <div>Edit 5</div>
+              </div>
+              <div style="padding:12px 18px;background:rgba(134,239,172,.15);border:2px solid rgba(134,239,172,.5);border-radius:6px;color:#86EFAC;text-align:center;min-width:70px;position:relative;">
+                <div style="font-size:9px;opacity:.8;margin-bottom:4px;">[4] ← TOP</div>
+                <div>Edit 6</div>
+              </div>
+            </div>
+            <div style="padding:8px 0 8px 14px;color:#86EFAC;font-size:11px;">← pop()<br/>restores<br/>this</div>
+          </div>
+          <div style="margin-top:12px;font-size:11px;font-family:'Fira Code',monospace;color:rgba(255,255,255,.3);"># Edit 1 was automatically discarded when Edit 6 was appended (deque full)</div>
+        </div>
+      </div>
+
+      <div class="step-list" style="margin-top:28px;">
+        <div class="step">
+          <div class="step-num">✎</div>
+          <div class="step-body">
+            <div class="step-title">User types — <code>update_content(new_text)</code></div>
+            <div class="step-desc">Before overwriting, Treebase pushes the current content onto <code>undo_stack</code> via <code>append()</code>, then clears <code>redo_stack</code>. If the stack is at maxlen=50, the oldest entry is silently evicted — O(1), no manual management needed.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">↩</div>
+          <div class="step-body">
+            <div class="step-title">User presses Undo — <code>undo()</code></div>
+            <div class="step-desc">Push current content onto <code>redo_stack</code>, then <code>pop()</code> the top of <code>undo_stack</code> and restore it. Both operations are O(1). The editor instantly shows the previous state.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">↪</div>
+          <div class="step-body">
+            <div class="step-title">User presses Redo — <code>redo()</code></div>
+            <div class="step-desc">Push current content onto <code>undo_stack</code>, pop from <code>redo_stack</code>, restore. The redo chain is destroyed the moment the user types anything new — just like every modern editor.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">⊙</div>
+          <div class="step-body">
+            <div class="step-title">Commit — both stacks cleared</div>
+            <div class="step-desc">When you commit, both <code>undo_stack</code> and <code>redo_stack</code> are cleared. This is intentional — you've created a permanent checkpoint. Future undos operate within the new working state, not across commit boundaries.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-amber"><strong>Why not a plain list?</strong> A plain list has <strong>no upper bound</strong>. A server-side session that serialises to PostgreSQL must not grow without limit — the bounded deque gives a hard guarantee: the undo buffer is always ≤ 50 content snapshots regardless of how long a user edits.</div>
+
+      <!-- VISUAL STATE TRANSITIONS -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">State Transitions — What Each Action Does</h3>
+
+      <div style="margin:20px 0;display:flex;flex-direction:column;gap:12px;">
+
+        <!-- Action: User types -->
+        <div style="border-radius:var(--radius);border:1.5px solid var(--border);overflow:hidden;">
+          <div style="background:var(--ink);padding:10px 18px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:16px;">✎</span>
+            <span style="font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;">User types new content</span>
+          </div>
+          <div style="padding:18px 20px;background:var(--bg2);display:grid;grid-template-columns:1fr 32px 1fr;gap:8px;align-items:center;">
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:8px;">Before</div>
+              <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;">
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Undo: [A, B, <strong>C</strong>]</div>
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Redo: [X, Y]</div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--ink3);">Current content: <strong>C</strong></div>
+            </div>
+            <div style="text-align:center;color:var(--accent);font-size:20px;">→</div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:8px;">After</div>
+              <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;">
+                <div style="padding:6px 10px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);">Undo: [A, B, C, <strong>D</strong>]</div>
+                <div style="padding:6px 10px;border-radius:6px;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;">Redo: [ ]</div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--ink3);">Current content: <strong>new text</strong></div>
+            </div>
+          </div>
+          <div style="padding:10px 20px;background:var(--bg3);border-top:1px solid var(--border);font-size:12.5px;color:var(--ink3);">Old content C is pushed onto undo stack. Redo stack is <strong>wiped</strong> — any undone work is discarded. New content becomes current.</div>
+        </div>
+
+        <!-- Action: Undo -->
+        <div style="border-radius:var(--radius);border:1.5px solid var(--border);overflow:hidden;">
+          <div style="background:var(--ink);padding:10px 18px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:16px;">↩</span>
+            <span style="font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;">User presses Undo</span>
+          </div>
+          <div style="padding:18px 20px;background:var(--bg2);display:grid;grid-template-columns:1fr 32px 1fr;gap:8px;align-items:center;">
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:8px;">Before</div>
+              <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;">
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Undo: [A, B, <strong>C</strong>]</div>
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Redo: [ ]</div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--ink3);">Current content: <strong>D</strong></div>
+            </div>
+            <div style="text-align:center;color:var(--accent);font-size:20px;">→</div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:8px;">After</div>
+              <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;">
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Undo: [A, <strong>B</strong>]</div>
+                <div style="padding:6px 10px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);">Redo: [<strong>D</strong>]</div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--ink3);">Current content: <strong>C</strong> (restored)</div>
+            </div>
+          </div>
+          <div style="padding:10px 20px;background:var(--bg3);border-top:1px solid var(--border);font-size:12.5px;color:var(--ink3);">Current content D is pushed onto redo. Top of undo stack (C) is popped and becomes current. Both are O(1).</div>
+        </div>
+
+        <!-- Action: Redo -->
+        <div style="border-radius:var(--radius);border:1.5px solid var(--border);overflow:hidden;">
+          <div style="background:var(--ink);padding:10px 18px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:16px;">↪</span>
+            <span style="font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;">User presses Redo</span>
+          </div>
+          <div style="padding:18px 20px;background:var(--bg2);display:grid;grid-template-columns:1fr 32px 1fr;gap:8px;align-items:center;">
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:8px;">Before</div>
+              <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;">
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Undo: [A, B]</div>
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Redo: [<strong>D</strong>]</div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--ink3);">Current content: <strong>C</strong></div>
+            </div>
+            <div style="text-align:center;color:var(--accent);font-size:20px;">→</div>
+            <div>
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:8px;">After</div>
+              <div style="display:flex;gap:6px;align-items:center;font-family:var(--mono);font-size:12px;">
+                <div style="padding:6px 10px;border-radius:6px;background:var(--accent-bg);border:1px solid var(--accent-border);color:var(--accent);">Undo: [A, B, <strong>C</strong>]</div>
+                <div style="padding:6px 10px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);">Redo: [ ]</div>
+              </div>
+              <div style="margin-top:8px;font-size:12px;color:var(--ink3);">Current content: <strong>D</strong> (re-applied)</div>
+            </div>
+          </div>
+          <div style="padding:10px 20px;background:var(--bg3);border-top:1px solid var(--border);font-size:12.5px;color:var(--ink3);">Current content C is pushed onto undo. Top of redo stack (D) is popped and becomes current. Again, both O(1).</div>
+        </div>
+
+      </div>
+
+      <div class="tbl-wrap" style="margin-top:28px;">
+        <table>
+          <thead><tr><th>Operation</th><th>Time</th><th>Memory</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>Push (type/edit)</td><td><span class="badge b-green">O(1)</span></td><td>O(1) amortised</td><td>Auto-evicts oldest at maxlen</td></tr>
+            <tr><td>Undo / Redo pop</td><td><span class="badge b-green">O(1)</span></td><td>—</td><td>Pop from right end of deque</td></tr>
+            <tr><td>Max memory</td><td>—</td><td>O(50) = O(1)</td><td>Hard bounded — safe to serialise</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 4 — LCA                                               -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="section anchor-target" id="lca">
+      <div class="eyebrow"><div class="eye-tag">Algorithm 04</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">LCA — Lowest Common Ancestor</h2>
+      <p class="sec-sub">Finding the last shared commit before two branches diverged</p>
+
+      <div class="prose">
+        <p><strong>The problem in one sentence:</strong> before we can merge branch <em>feature</em> into <em>main</em>, we need to know the last commit they <em>both</em> agreed on — the point where they forked. That commit is the <strong>Lowest Common Ancestor</strong> (LCA).</p>
+        <p>Without the LCA we cannot tell what each branch <em>independently changed</em>. We'd be comparing two snapshots with no shared reference, so we couldn't detect whether a line was added, deleted, or untouched.</p>
+      </div>
+
+      <div class="callout">
+        <strong>Intuition:</strong> think of two people who started writing a story from the same page, then each wrote their own ending. The LCA is that last shared page. To merge their endings, you first have to find it.
+      </div>
+
+      <!-- WORKED EXAMPLE TREE -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">Worked Example — A Real Commit Tree</h3>
+
+      <div class="prose">
+        <p>Imagine the following repository history. Commits flow top-to-bottom; arrows point from parent to child.</p>
+      </div>
+
+<div class="tree-diagram" style="position:relative;">
+  <div style="font-family:'Fira Code',monospace;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(74,222,128,.5);margin-bottom:20px;">▶ Commit History — grows top to bottom</div>
+
+  <!-- Root row -->
+  <div style="display:flex;align-items:center;gap:0;margin-bottom:0;">
+    <span class="node base">C0</span>
+    <span class="connector" style="padding:0 6px;font-size:18px;letter-spacing:-2px;color:rgba(165,180,252,.5);">──→</span>
+    <span class="node base">C1</span>
+    <span class="connector" style="padding:0 6px;font-size:18px;letter-spacing:-2px;color:rgba(165,180,252,.5);">──→</span>
+    <span class="node lca" title="Lowest Common Ancestor">C2 ★ LCA</span>
+    <span style="margin-left:14px;font-size:11px;color:rgba(252,165,165,.7);font-family:'Fira Code',monospace;">← last shared commit</span>
+  </div>
+
+  <!-- Diverge arrows -->
+  <div style="display:flex;margin-left:174px;gap:100px;line-height:1;padding:2px 0;">
+    <div style="display:flex;flex-direction:column;align-items:center;color:rgba(134,239,172,.45);font-size:18px;line-height:1;">↓</div>
+    <div style="display:flex;flex-direction:column;align-items:center;color:rgba(253,224,71,.4);font-size:18px;margin-left:28px;">↓</div>
+  </div>
+
+  <!-- Two branches -->
+  <div style="display:flex;gap:56px;margin-left:148px;align-items:flex-start;">
+    <!-- main branch -->
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="node mine">C3</span>
+        <span class="connector" style="font-size:16px;color:rgba(134,239,172,.5);">→</span>
+        <span class="node mine">C4</span>
+      </div>
+      <div style="font-size:10.5px;font-family:'Fira Code',monospace;color:#86EFAC;opacity:.75;padding-left:4px;">⎇ main  (HEAD)</div>
+    </div>
+
+    <!-- feature branch -->
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="node theirs">C3'</span>
+        <span class="connector" style="font-size:16px;color:rgba(253,224,71,.5);">→</span>
+        <span class="node theirs">C4'</span>
+      </div>
+      <div style="font-size:10.5px;font-family:'Fira Code',monospace;color:#FDE047;opacity:.75;padding-left:4px;">⎇ feature</div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07);display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:8px;"><span class="node lca" style="font-size:10px;padding:2px 8px;">★ LCA</span><span style="font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace;">merge base</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span class="node mine" style="font-size:10px;padding:2px 8px;">Cx</span><span style="font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace;">main branch</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span class="node theirs" style="font-size:10px;padding:2px 8px;">Cx'</span><span style="font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace;">feature branch</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span class="node base" style="font-size:10px;padding:2px 8px;">C0–C2</span><span style="font-size:11px;color:rgba(255,255,255,.35);font-family:'Fira Code',monospace;">shared history</span></div>
+  </div>
+</div>
+
+      <div class="prose" style="margin-top:16px;">
+        <p>Here, <strong>C2</strong> is the LCA — it's the latest commit that both <code>main</code> (C4) and <code>feature</code> (C4') both descend from. C3 and C3' are already diverged.</p>
+        <p>The LCA gives us the <strong>base</strong> content. Then:</p>
+      </div>
+      <div style="margin:16px 0 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;max-width:700px;">
+        <div style="padding:14px 16px;border-radius:8px;background:#EEF2FF;border:1px solid #C7D2FE;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#4338CA;margin-bottom:6px;">BASE (LCA = C2)</div>
+          <div style="font-size:12.5px;color:#3730A3;font-family:var(--mono);">last shared version</div>
+        </div>
+        <div style="padding:14px 16px;border-radius:8px;background:#F0FDF4;border:1px solid #BBF7D0;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#166534;margin-bottom:6px;">MINE (main = C4)</div>
+          <div style="font-size:12.5px;color:#166534;font-family:var(--mono);">what my branch did</div>
+        </div>
+        <div style="padding:14px 16px;border-radius:8px;background:#FEFCE8;border:1px solid #FDE047;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#713F12;margin-bottom:6px;">THEIRS (feature = C4')</div>
+          <div style="font-size:12.5px;color:#713F12;font-family:var(--mono);">what their branch did</div>
+        </div>
+      </div>
+
+      <!-- STEP BY STEP ALGORITHM -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:40px 0 20px;letter-spacing:-.5px;">Step-by-Step Algorithm</h3>
+
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Walk up Branch A — collect all ancestors</div>
+            <div class="step-desc">Starting from the HEAD of <em>main</em> (C4), follow parent pointers all the way up: C4 → C3 → C2 → C1 → C0. Store every commit ID in a <code>set</code> — call it <code>ancestors</code>. This is O(D) where D = depth of the branch.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Walk up Branch B — check against the set</div>
+            <div class="step-desc">Starting from the HEAD of <em>feature</em> (C4'), follow parent pointers: C4' → C3' → <strong>C2</strong>. At C2, check: is C2 in <code>ancestors</code>? <strong>Yes!</strong> Stop immediately. C2 is the LCA.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Use the LCA's content as the merge base</div>
+            <div class="step-desc">Retrieve C2's saved content from the commit node. This is the <strong>base</strong> document that the 3-way merge algorithm receives. Every line that is the same in base, mine, and theirs will stay. Every line changed only in one branch gets accepted. Only lines changed in <em>both</em> produce a conflict.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISUAL ALGORITHM WALK -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">How the Algorithm Walks the Tree</h3>
+
+      <div style="margin:20px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+        <div style="background:var(--ink);padding:12px 20px;font-family:var(--sans);font-size:12px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.1em;">Phase 1 — Collect all ancestors of branch A (main) into a set</div>
+        <div style="padding:20px 24px;background:var(--bg2);display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+            <div style="padding:8px 16px;border-radius:7px;background:#EEF2FF;border:1.5px solid #C7D2FE;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#4338CA;">C4 (main HEAD)</div>
+            <div style="color:rgba(0,0,0,.25);font-size:16px;">↑</div>
+            <div style="padding:8px 16px;border-radius:7px;background:#EEF2FF;border:1.5px solid #C7D2FE;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#4338CA;">C3</div>
+            <div style="color:rgba(0,0,0,.25);font-size:16px;">↑</div>
+            <div style="padding:8px 16px;border-radius:7px;background:#EEF2FF;border:1.5px solid #C7D2FE;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#4338CA;">C2</div>
+            <div style="color:rgba(0,0,0,.25);font-size:16px;">↑</div>
+            <div style="padding:8px 16px;border-radius:7px;background:#EEF2FF;border:1.5px solid #C7D2FE;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#4338CA;">C1</div>
+            <div style="color:rgba(0,0,0,.25);font-size:16px;">↑</div>
+            <div style="padding:8px 16px;border-radius:7px;background:#EEF2FF;border:1.5px solid #C7D2FE;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#4338CA;">C0 (root)</div>
+          </div>
+          <div style="font-size:28px;color:var(--border2);">→</div>
+          <div style="padding:20px 24px;border-radius:var(--radius);background:var(--bg3);border:1.5px solid var(--border);flex:1;min-width:200px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink4);margin-bottom:12px;">Ancestor set built</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;font-family:var(--mono);font-size:12.5px;">
+              <span style="padding:4px 10px;border-radius:5px;background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA;">C4</span>
+              <span style="padding:4px 10px;border-radius:5px;background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA;">C3</span>
+              <span style="padding:4px 10px;border-radius:5px;background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA;">C2</span>
+              <span style="padding:4px 10px;border-radius:5px;background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA;">C1</span>
+              <span style="padding:4px 10px;border-radius:5px;background:#EEF2FF;border:1px solid #C7D2FE;color:#4338CA;">C0</span>
+            </div>
+            <div style="margin-top:12px;font-size:12.5px;color:var(--ink3);">Every commit ID from branch A is stored. Hash set means each lookup costs O(1).</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin:12px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+        <div style="background:var(--ink);padding:12px 20px;font-family:var(--sans);font-size:12px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.1em;">Phase 2 — Walk up branch B (feature), check each commit against the set</div>
+        <div style="padding:20px 24px;background:var(--bg2);">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);">
+              <div style="padding:6px 14px;border-radius:6px;background:#FEFCE8;border:1.5px solid #FDE047;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#713F12;min-width:60px;text-align:center;">C4'</div>
+              <div style="font-size:13px;color:var(--ink3);">Check: is <strong>C4'</strong> in ancestor set? <span style="color:#991B1B;font-weight:600;">No</span> — continue upward.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);">
+              <div style="padding:6px 14px;border-radius:6px;background:#FEFCE8;border:1.5px solid #FDE047;font-family:var(--mono);font-size:12.5px;font-weight:700;color:#713F12;min-width:60px;text-align:center;">C3'</div>
+              <div style="font-size:13px;color:var(--ink3);">Check: is <strong>C3'</strong> in ancestor set? <span style="color:#991B1B;font-weight:600;">No</span> — continue upward.</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:8px;background:#FEF2F2;border:2px solid var(--accent-border);">
+              <div style="padding:6px 14px;border-radius:6px;background:rgba(239,68,68,.15);border:2px solid rgba(239,68,68,.5);font-family:var(--mono);font-size:12.5px;font-weight:700;color:#991B1B;min-width:60px;text-align:center;">C2 ★</div>
+              <div style="font-size:13px;color:var(--ink);">Check: is <strong>C2</strong> in ancestor set? <span style="color:var(--accent);font-weight:700;">YES — LCA FOUND!</span> Stop immediately and return C2. Its content is the merge base.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-blue" style="margin-top:24px;">
+        <strong>Why a set and not a list?</strong> Checking membership in a hash set is O(1) on average. If instead we used a plain list, each "is this ID in the list?" check would scan every element — O(D) per check — making the whole algorithm O(D²). The hash set is the critical optimisation that keeps it at O(D) total.
+      </div>
+
+      <!-- COMPLEXITY TABLE -->
+      <div class="tbl-wrap" style="margin-top:28px;">
+        <table>
+          <thead><tr><th>Scenario</th><th>Time</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Branches diverged recently (D small)</td><td><span class="badge b-green">~O(1)</span></td><td>LCA found after just a few pointer hops</td></tr>
+            <tr><td>General case</td><td><span class="badge b-amber">O(D)</span></td><td>D = depth of the shallower branch</td></tr>
+            <tr><td>Set membership check per node</td><td><span class="badge b-green">O(1)</span></td><td>Hash set lookup, not a linear scan</td></tr>
+            <tr><td>Space used</td><td><span class="badge b-amber">O(D_A)</span></td><td>Ancestor set stores all commits on branch A</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <!--  SECTION 2 — 3-WAY MERGE                                       -->
+    <!-- ═══════════════════════════════════════════════════════════════ -->
+    <section class="section anchor-target" id="merge">
+      <div class="eyebrow"><div class="eye-tag">Algorithm 05</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">3-Way Merge &amp; Conflict Resolution</h2>
+      <p class="sec-sub">How Treebase combines two diverged branches line by line</p>
+
+      <div class="prose">
+        <p>A <strong>3-way merge</strong> uses three documents: the <em>base</em> (LCA content), <em>mine</em> (current branch HEAD), and <em>theirs</em> (target branch HEAD). It compares all three to decide what goes into the merged result — and it's smarter than it sounds.</p>
+      </div>
+
+      <!-- WHY NOT 2-WAY -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">Why not just diff mine vs theirs?</h3>
+      <div class="prose">
+        <p>A simple 2-way diff sees <em>any difference</em> as a conflict. Imagine both branches delete the same old line — a 2-way diff flags it as a conflict, even though both branches agree. A 3-way diff uses the base to know the line existed before, and since both deleted it, it accepts the deletion silently.</p>
+      </div>
+      <div class="callout callout-amber">
+        <strong>The golden rule:</strong> if only ONE branch changed a line relative to base → accept that change. If BOTH changed the same line differently → conflict marker.
+      </div>
+
+      <!-- WORKED EXAMPLE -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:36px 0 16px;letter-spacing:-.5px;">Concrete Worked Example</h3>
+
+      <div class="prose">
+        <p>Imagine a Python file with 5 lines. After branching from <strong>C2 (base)</strong>, both branches edit the file independently:</p>
+      </div>
+
+      <div class="merge-cols">
+        <div class="merge-col">
+          <div class="merge-col-head base">📁 BASE (C2 — LCA content)</div>
+          <div class="merge-col-body">
+            <div class="merge-line normal">name = "Alice"</div>
+            <div class="merge-line normal">role = "admin"</div>
+            <div class="merge-line normal">score = 100</div>
+            <div class="merge-line normal">active = True</div>
+            <div class="merge-line normal">email = "a@x.com"</div>
+          </div>
+        </div>
+        <div class="merge-col">
+          <div class="merge-col-head mine">🟢 MINE (main — C4)</div>
+          <div class="merge-col-body">
+            <div class="merge-line normal">name = "Alice"</div>
+            <div class="merge-line add">role = "superadmin"</div>
+            <div class="merge-line normal">score = 100</div>
+            <div class="merge-line add">active = False</div>
+            <div class="merge-line normal">email = "a@x.com"</div>
+          </div>
+        </div>
+        <div class="merge-col">
+          <div class="merge-col-head theirs">🟡 THEIRS (feature — C4')</div>
+          <div class="merge-col-body">
+            <div class="merge-line normal">name = "Alice"</div>
+            <div class="merge-line normal">role = "admin"</div>
+            <div class="merge-line add">score = 200</div>
+            <div class="merge-line add">active = False</div>
+            <div class="merge-line add">email = "alice@corp.com"</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINE BY LINE ANALYSIS -->
+      <h3 style="font-family:var(--serif);font-size:20px;font-weight:700;color:var(--ink);margin:32px 0 14px;letter-spacing:-.3px;">Line-by-line analysis</h3>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Line</th><th>Base</th><th>Mine changed?</th><th>Theirs changed?</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>name</td>
+              <td><code>"Alice"</code></td>
+              <td>✗ Same</td>
+              <td>✗ Same</td>
+              <td><span class="badge b-green">Keep as-is</span></td>
+            </tr>
+            <tr>
+              <td>role</td>
+              <td><code>"admin"</code></td>
+              <td>✓ → <code>"superadmin"</code></td>
+              <td>✗ Same</td>
+              <td><span class="badge b-green">Accept mine</span> — only mine changed it</td>
+            </tr>
+            <tr>
+              <td>score</td>
+              <td><code>100</code></td>
+              <td>✗ Same</td>
+              <td>✓ → <code>200</code></td>
+              <td><span class="badge b-green">Accept theirs</span> — only theirs changed it</td>
+            </tr>
+            <tr>
+              <td>active</td>
+              <td><code>True</code></td>
+              <td>✓ → <code>False</code></td>
+              <td>✓ → <code>False</code></td>
+              <td><span class="badge b-green">Accept (both agree)</span> — identical change</td>
+            </tr>
+            <tr>
+              <td>email</td>
+              <td><code>"a@x.com"</code></td>
+              <td>✗ Same</td>
+              <td>✓ → <code>"alice@corp.com"</code></td>
+              <td><span class="badge b-green">Accept theirs</span> — only theirs changed it</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prose" style="margin-top:16px;">
+        <p>In this example there are <strong>no conflicts</strong>! Every line was changed by at most one branch, so the merge resolves cleanly. The merged result is:</p>
+      </div>
+
+      <div class="result-box">
+        <div class="result-box-head"><div class="dot" style="background:#2EA043"></div> merged_result.py — clean merge, no conflicts</div>
+        <div class="result-box-body">
+          <span class="r-normal">name = "Alice"</span><br>
+          <span class="r-add">role = "superadmin"       <span style="color:rgba(74,222,128,.35)">← accepted from mine</span></span><br>
+          <span class="r-add">score = 200               <span style="color:rgba(74,222,128,.35)">← accepted from theirs</span></span><br>
+          <span class="r-add">active = False            <span style="color:rgba(74,222,128,.35)">← both agreed, accepted</span></span><br>
+          <span class="r-add">email = "alice@corp.com"  <span style="color:rgba(74,222,128,.35)">← accepted from theirs</span></span>
+        </div>
+      </div>
+
+      <!-- CONFLICT CASE -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:40px 0 16px;letter-spacing:-.5px;">What happens when there IS a conflict?</h3>
+
+      <div class="prose">
+        <p>Now imagine <em>both</em> branches changed the <code>email</code> line to <em>different</em> values:</p>
+      </div>
+
+      <div class="merge-cols">
+        <div class="merge-col">
+          <div class="merge-col-head base">📁 BASE</div>
+          <div class="merge-col-body">
+            <div class="merge-line normal">email = "a@x.com"</div>
+          </div>
+        </div>
+        <div class="merge-col">
+          <div class="merge-col-head mine">🟢 MINE</div>
+          <div class="merge-col-body">
+            <div class="merge-line add">email = "alice@work.com"</div>
+          </div>
+        </div>
+        <div class="merge-col">
+          <div class="merge-col-head theirs">🟡 THEIRS</div>
+          <div class="merge-col-body">
+            <div class="merge-line add">email = "alice@corp.com"</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose" style="margin-top:16px;">
+        <p>Both branches changed <code>email</code> to different values. The algorithm cannot decide which is correct — that's a human decision. So it inserts <strong>Git-style conflict markers</strong>:</p>
+      </div>
+
+      <div class="result-box">
+        <div class="result-box-head"><div class="dot" style="background:#E3B341"></div> merged_result.py — conflict markers inserted</div>
+        <div class="result-box-body">
+          <span class="r-conf-head">&lt;&lt;&lt;&lt;&lt;&lt;&lt; main</span><br>
+          <span class="r-mine">email = "alice@work.com"</span><br>
+          <span class="r-conf-sep">=======</span><br>
+          <span class="r-theirs">email = "alice@corp.com"</span><br>
+          <span class="r-conf-head">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature</span>
+        </div>
+      </div>
+
+      <div class="prose" style="margin-top:16px;">
+        <p>The developer opens the file, sees the markers, decides which email is correct (or writes a third), removes the markers, and commits again. This is exactly how <code>git merge</code> works.</p>
+      </div>
+
+      <!-- VISUAL DECISION FLOW -->
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:40px 0 16px;letter-spacing:-.5px;">How Each Line Is Decided — Decision Flow</h3>
+
+      <div style="margin:20px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);">
+        <div style="background:var(--ink);padding:12px 20px;font-family:var(--sans);font-size:12px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.1em;">For each chunk of lines identified by diff3</div>
+        <div style="padding:24px 28px;background:var(--bg2);">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+
+            <div style="display:flex;align-items:stretch;gap:12px;">
+              <div style="width:3px;border-radius:4px;background:#A5B4FC;flex-shrink:0;"></div>
+              <div style="flex:1;padding:14px 16px;background:#EEF2FF;border-radius:8px;border:1px solid #C7D2FE;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#4338CA;margin-bottom:6px;">Situation: All three agree (base = mine = theirs)</div>
+                <div style="font-size:13.5px;color:#3730A3;">→ <strong>Keep as-is.</strong> No change on either branch. The line is included unchanged in the result.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:stretch;gap:12px;">
+              <div style="width:3px;border-radius:4px;background:#86EFAC;flex-shrink:0;"></div>
+              <div style="flex:1;padding:14px 16px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#166534;margin-bottom:6px;">Situation: Only mine changed (mine ≠ base, theirs = base)</div>
+                <div style="font-size:13.5px;color:#166534;">→ <strong>Accept mine.</strong> The other branch left this line alone, so my change wins automatically.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:stretch;gap:12px;">
+              <div style="width:3px;border-radius:4px;background:#FDE047;flex-shrink:0;"></div>
+              <div style="flex:1;padding:14px 16px;background:#FEFCE8;border-radius:8px;border:1px solid #FDE047;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#713F12;margin-bottom:6px;">Situation: Only theirs changed (theirs ≠ base, mine = base)</div>
+                <div style="font-size:13.5px;color:#713F12;">→ <strong>Accept theirs.</strong> I left this line alone, so their change wins automatically.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:stretch;gap:12px;">
+              <div style="width:3px;border-radius:4px;background:#6EE7B7;flex-shrink:0;"></div>
+              <div style="flex:1;padding:14px 16px;background:#ECFDF5;border-radius:8px;border:1px solid #6EE7B7;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#065F46;margin-bottom:6px;">Situation: Both changed, but to the same value (mine = theirs ≠ base)</div>
+                <div style="font-size:13.5px;color:#065F46;">→ <strong>Accept (both agree).</strong> Both branches independently made the same edit — include it, no conflict.</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:stretch;gap:12px;">
+              <div style="width:3px;border-radius:4px;background:#F87171;flex-shrink:0;"></div>
+              <div style="flex:1;padding:14px 16px;background:#FEF2F2;border-radius:8px;border:2px solid #FECACA;">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#991B1B;margin-bottom:6px;">Situation: Both changed to different values (mine ≠ theirs, both ≠ base)</div>
+                <div style="font-size:13.5px;color:#991B1B;margin-bottom:10px;">→ <strong>Conflict — insert markers.</strong> The algorithm cannot decide. A human must resolve it.</div>
+                <div style="background:#0D1117;border-radius:6px;padding:12px 16px;font-family:var(--mono);font-size:12.5px;line-height:1.9;">
+                  <span style="color:#F87171;font-weight:600;">&lt;&lt;&lt;&lt;&lt;&lt;&lt; main</span><br>
+                  <span style="color:#86EFAC;display:block;background:rgba(74,222,128,.07);padding:0 4px;">email = "alice@work.com"</span>
+                  <span style="color:#FACC15;">=======</span><br>
+                  <span style="color:#FDE047;display:block;background:rgba(250,204,21,.07);padding:0 4px;">email = "alice@corp.com"</span>
+                  <span style="color:#F87171;font-weight:600;">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ink);margin:40px 0 16px;letter-spacing:-.5px;">Full Merge Flow — LCA → 3-way → Result</h3>
+
+<div class="ascii-tree"><span style="color:rgba(255,255,255,.35)">User clicks "Merge feature → main"</span>
+         │
+         ▼
+<span style="color:#A5B4FC">┌─────────────────────────────────────────────────────┐</span>
+<span style="color:#A5B4FC">│  Step 1: LCA Detection                               │</span>
+<span style="color:#A5B4FC">│  Walk main's ancestors into a set                    │</span>
+<span style="color:#A5B4FC">│  Walk feature up until we hit that set  → LCA = C2  │</span>
+<span style="color:#A5B4FC">└─────────────────────────────────────────────────────┘</span>
+         │
+         ▼
+<span style="color:#86EFAC">┌─────────────────────────────────────────────────────┐</span>
+<span style="color:#86EFAC">│  Step 2: Collect three documents                     │</span>
+<span style="color:#86EFAC">│  base   = C2.content   (LCA content)                 │</span>
+<span style="color:#86EFAC">│  mine   = C4.content   (main HEAD)                   │</span>
+<span style="color:#86EFAC">│  theirs = C4'.content  (feature HEAD)                │</span>
+<span style="color:#86EFAC">└─────────────────────────────────────────────────────┘</span>
+         │
+         ▼
+<span style="color:#FDE047">┌─────────────────────────────────────────────────────┐</span>
+<span style="color:#FDE047">│  Step 3: diff3 / merge3 line-by-line comparison      │</span>
+<span style="color:#FDE047">│  For each chunk:                                      │</span>
+<span style="color:#FDE047">│    unchanged       → keep                            │</span>
+<span style="color:#FDE047">│    mine only       → accept mine                     │</span>
+<span style="color:#FDE047">│    theirs only     → accept theirs                   │</span>
+<span style="color:#FDE047">│    both same diff  → accept (both agree)             │</span>
+<span style="color:#FDE047">│    both diff diff  → <<<< conflict markers >>>>      │</span>
+<span style="color:#FDE047">└─────────────────────────────────────────────────────┘</span>
+         │
+         ▼
+<span style="color:#D8B4FE">┌─────────────────────────────────────────────────────┐</span>
+<span style="color:#D8B4FE">│  Step 4: Create merge commit                         │</span>
+<span style="color:#D8B4FE">│  CommitNode(message="Merge feature → main",          │</span>
+<span style="color:#D8B4FE">│             content=merged_content,                  │</span>
+<span style="color:#D8B4FE">│             parent=C4, merged_from=C4')              │</span>
+<span style="color:#D8B4FE">│  Both C4 and C4' become parents of this node         │</span>
+<span style="color:#D8B4FE">└─────────────────────────────────────────────────────┘</span>
+         │
+         ▼
+<span style="color:rgba(255,255,255,.35)">Editor shows merged content. User resolves any conflicts, commits again.</span></div>
+
+      <!-- COMPLEXITY -->
+      <div class="tbl-wrap" style="margin-top:28px;">
+        <table>
+          <thead><tr><th>Phase</th><th>Time Complexity</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>LCA detection</td><td><span class="badge b-amber">O(D)</span></td><td>D = depth of shallower branch</td></tr>
+            <tr><td>Split into lines</td><td><span class="badge b-amber">O(L)</span></td><td>L = total lines in file</td></tr>
+            <tr><td>diff3 chunk comparison</td><td><span class="badge b-amber">O(L)</span></td><td>Each line examined once</td></tr>
+            <tr><td>Assembling merged output</td><td><span class="badge b-amber">O(L)</span></td><td>Joining result lines</td></tr>
+            <tr><td>Creating merge commit</td><td><span class="badge b-green">O(1)</span></td><td>Append child + insert into hash map</td></tr>
+            <tr><td><strong>Total</strong></td><td><span class="badge b-amber"><strong>O(D + L)</strong></span></td><td>Dominated by file size or branch depth</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FOOTER NAV -->
+    <section style="padding:40px 64px 64px;background:var(--bg2);border-top:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <a class="back-link" href="index.html">← Back to main documentation</a>
+        <div style="display:flex;gap:10px;">
+          <a class="back-link" href="#lca" style="border-color:var(--accent-border);color:var(--accent);background:var(--accent-bg);">① LCA Algorithm</a>
+          <a class="back-link" href="#merge" style="border-color:var(--accent-border);color:var(--accent);background:var(--accent-bg);">② 3-Way Merge</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// Progress bar
+window.addEventListener("scroll", () => {
+  const h = document.documentElement;
+  const pct = h.scrollTop / (h.scrollHeight - h.clientHeight);
+  document.getElementById("progress").style.transform = `scaleX(${pct})`;
+});
+
+// Active nav on scroll
+const navLinks = document.querySelectorAll(".nav-link[href^='#']");
+const sections = [...navLinks].map(l => document.querySelector(l.getAttribute("href"))).filter(Boolean);
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.classList.toggle("active", l.getAttribute("href") === "#" + e.target.id));
+    }
+  });
+}, { rootMargin: "-20% 0px -70% 0px", threshold: 0 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

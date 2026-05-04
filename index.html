@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Treebase — A Visual Version Control System built from scratch using N-ary trees, hash maps, and bounded deques."/>
+  <title>Treebase — Visual VCS Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+:root {
+  --bg:#F8F7F4;--bg2:#FFFFFF;--bg3:#F1F0EC;--border:#E8E6E0;--border2:#D4D1C8;
+  --ink:#1A1917;--ink2:#3D3A35;--ink3:#6B6760;--ink4:#9E9B96;
+  --accent:#1B6B3A;--accent2:#25924F;--accent-bg:#EBF5EF;--accent-border:#B8DFC7;
+  --amber:#92400E;--amber-bg:#FEF3C7;--blue:#1D4ED8;--blue-bg:#EFF6FF;--blue-border:#BFDBFE;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Plus Jakarta Sans',system-ui,sans-serif;--mono:'Fira Code','Courier New',monospace;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 40px rgba(0,0,0,.10),0 4px 12px rgba(0,0,0,.06);
+  --radius:12px;--radius-sm:8px;--radius-xs:5px;--sidebar-w:264px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+::selection{background:var(--accent-bg);color:var(--accent);}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+
+#progress{position:fixed;top:0;left:var(--sidebar-w);right:0;height:2px;background:linear-gradient(90deg,var(--accent),#34D399);z-index:9999;transform-origin:left;transform:scaleX(0);transition:transform .1s linear;}
+
+.layout{display:flex;min-height:100vh;}
+
+.sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);position:fixed;top:0;left:0;bottom:0;display:flex;flex-direction:column;overflow-y:auto;z-index:100;}
+.sidebar::-webkit-scrollbar{width:3px;}.sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.sidebar-header{padding:28px 24px 20px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sidebar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+.sidebar-logo-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent) 0%,#34D399 100%);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;box-shadow:0 2px 8px rgba(27,107,58,.25);}
+.sidebar-logo-text{font-family:var(--serif);font-size:20px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-.5px;}
+.sidebar-logo-text em{color:var(--accent);font-style:italic;}
+.sidebar-nav{padding:20px 14px;flex:1;}
+.nav-group{margin-bottom:24px;}
+.nav-group-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4);padding:0 10px;margin-bottom:6px;display:block;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-xs);text-decoration:none;color:var(--ink3);font-size:13px;font-weight:500;transition:all .15s;cursor:pointer;border:none;background:none;width:100%;text-align:left;}
+.nav-link:hover{background:var(--bg3);color:var(--ink);}
+.nav-link.active{background:var(--accent-bg);color:var(--accent);font-weight:600;}
+.nav-num{font-family:var(--mono);font-size:10px;color:var(--ink4);min-width:22px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:1px 5px;text-align:center;flex-shrink:0;transition:all .15s;}
+.nav-link.active .nav-num{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);}
+.nav-link-indicator{width:4px;height:4px;border-radius:50%;background:var(--accent);margin-left:auto;flex-shrink:0;opacity:0;transition:opacity .2s;}
+.nav-link.active .nav-link-indicator{opacity:1;}
+.sidebar-footer{padding:16px 14px;border-top:1px solid var(--border);flex-shrink:0;}
+.sidebar-actions{display:flex;flex-direction:column;gap:8px;}
+.sidebar-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--radius-xs);text-decoration:none;font-size:12.5px;font-weight:600;font-family:var(--sans);transition:all .18s;}
+.sidebar-btn-primary{background:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(27,107,58,.25);}
+.sidebar-btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.sidebar-btn-secondary{background:var(--bg3);color:var(--ink2);border:1px solid var(--border);}
+.sidebar-btn-secondary:hover{background:var(--border);color:var(--ink);}
+
+.main{margin-left:var(--sidebar-w);min-height:100vh;flex:1;}
+
+.hero{background:var(--bg2);border-bottom:1px solid var(--border);padding:72px 64px 64px;position:relative;overflow:hidden;}
+.hero-grid-bg{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;opacity:.35;-webkit-mask-image:radial-gradient(ellipse 80% 100% at 100% 0%,rgba(0,0,0,.5) 0%,transparent 70%);mask-image:radial-gradient(ellipse 80% 100% at 100% 0%,rgba(0,0,0,.5) 0%,transparent 70%);}
+.hero-watermark{position:absolute;right:-10px;bottom:-60px;font-family:var(--serif);font-size:260px;font-weight:800;color:var(--border);line-height:1;pointer-events:none;user-select:none;letter-spacing:-12px;opacity:.6;}
+.hero h1{font-family:var(--serif);font-size:clamp(40px,4.8vw,68px);font-weight:800;line-height:1.05;letter-spacing:-2px;color:var(--ink);max-width:720px;margin-bottom:20px;position:relative;}
+.hero h1 em{font-style:italic;color:var(--accent);}
+.hero-desc{font-size:15.5px;color:var(--ink2);max-width:560px;line-height:1.85;margin-bottom:36px;font-weight:300;position:relative;}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;position:relative;}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;background:var(--accent);color:#fff;text-decoration:none;border-radius:var(--radius-sm);font-size:13.5px;font-weight:600;font-family:var(--sans);transition:all .2s;box-shadow:0 4px 16px rgba(27,107,58,.3);}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn-secondary{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;background:var(--bg);color:var(--ink2);text-decoration:none;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13.5px;font-family:var(--sans);transition:all .2s;}
+.btn-secondary:hover{background:var(--bg3);border-color:var(--border2);color:var(--ink);}
+
+/* Animated stats */
+.hero-stats{display:flex;gap:0;margin-top:52px;padding-top:36px;border-top:1px solid var(--border);position:relative;}
+.stat{flex:1;padding-left:32px;border-left:1px solid var(--border);}
+.stat:first-child{padding-left:0;border-left:none;}
+.stat-val{font-family:var(--serif);font-size:38px;font-weight:800;color:var(--ink);line-height:1;letter-spacing:-1.5px;}
+.stat-val span,.stat-val .count{color:var(--accent);}
+.stat-label{font-size:11.5px;font-weight:500;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-top:5px;}
+
+.section{padding:64px 64px;border-bottom:1px solid var(--border);background:var(--bg);}
+.section.white{background:var(--bg2);}
+.section-inner{max-width:100%;}
+.eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.eye-tag{font-family:var(--mono);font-size:10.5px;font-weight:500;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:3px 10px;border-radius:var(--radius-xs);}
+.eye-line{flex:1;height:1px;background:var(--border);max-width:48px;}
+.sec-title{font-family:var(--serif);font-size:clamp(26px,3.2vw,40px);font-weight:800;line-height:1.1;letter-spacing:-1px;color:var(--ink);margin-bottom:8px;}
+.sec-sub{font-size:14px;color:var(--ink4);margin-bottom:32px;padding-bottom:28px;border-bottom:1px solid var(--border);max-width:820px;}
+.prose{font-size:15px;color:var(--ink2);line-height:1.88;max-width:820px;}
+.prose p+p{margin-top:16px;}
+.prose strong{color:var(--ink);font-weight:600;}
+.prose a{color:var(--accent);text-decoration:underline;text-underline-offset:3px;}
+.prose code{font-family:var(--mono);font-size:12.5px;background:var(--amber-bg);border:1px solid #FDE68A;padding:1px 6px;border-radius:4px;color:var(--amber);}
+.callout{margin:24px 0;padding:18px 22px;border-left:3px solid var(--accent);background:var(--accent-bg);border-radius:0 var(--radius-sm) var(--radius-sm) 0;font-size:14.5px;color:var(--accent);line-height:1.75;}
+
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:28px;}
+.feat-card{padding:26px;border-radius:var(--radius);background:var(--bg2);border:1.5px solid var(--border);transition:all .25s;position:relative;overflow:hidden;}
+.feat-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(27,107,58,.04) 0%,transparent 60%);opacity:0;transition:opacity .25s;}
+.feat-card:hover{border-color:var(--accent-border);box-shadow:0 8px 28px rgba(27,107,58,.1),var(--shadow-md);transform:translateY(-3px);}
+.feat-card:hover::before{opacity:1;}
+.feat-icon{width:44px;height:44px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent-bg) 0%,#D1FAE5 100%);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(27,107,58,.12);}
+.feat-title{font-family:var(--serif);font-size:17.5px;font-weight:700;color:var(--ink);margin-bottom:8px;line-height:1.3;}
+.feat-desc{font-size:13.5px;color:var(--ink3);line-height:1.7;}
+.feat-badge{display:inline-block;margin-top:14px;font-size:9.5px;font-weight:700;letter-spacing:.12em;padding:4px 12px;border-radius:20px;background:linear-gradient(90deg,var(--accent-bg),#D1FAE5);color:var(--accent);border:1px solid var(--accent-border);text-transform:uppercase;}
+
+.code-block{margin:24px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #2D2D2D;box-shadow:var(--shadow-md);max-width:900px;}
+.code-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#1E1E1E;border-bottom:1px solid rgba(255,255,255,.06);}
+.dots{display:flex;gap:6px;}.dots span{width:10px;height:10px;border-radius:50%;}
+.dot-r{background:#FF5F57;}.dot-y{background:#FEBC2E;}.dot-g{background:#28C840;}
+.code-file{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3);}
+pre{background:#1A1A1A;padding:22px 24px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.9;color:#D4D4D4;}
+.k{color:#569CD6;}.t{color:#4EC9B0;}.f{color:#DCDCAA;}.s{color:#CE9178;}.c{color:#6A9955;font-style:italic;}.n{color:#9CDCFE;}.nm{color:#B5CEA8;}
+
+.tbl-wrap{margin:24px 0;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+table{width:100%;border-collapse:collapse;background:var(--bg2);}
+thead tr{background:var(--ink);}
+thead th{padding:13px 18px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.55);text-align:left;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--bg3);}
+td{padding:13px 18px;font-size:13px;color:var(--ink2);vertical-align:middle;}
+td:first-child{color:var(--ink);font-weight:500;}
+td code{font-family:var(--mono);font-size:11.5px;background:var(--bg3);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--amber);}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-family:var(--mono);font-size:10.5px;font-weight:600;}
+.b-green{background:#DCFCE7;color:#166534;}.b-amber{background:#FEF3C7;color:#92400E;}.b-blue{background:var(--blue-bg);color:var(--blue);}
+
+.ds-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0 0;}
+.ds-card{padding:24px;border-radius:var(--radius);background:var(--bg2);border:1.5px solid var(--border);position:relative;transition:all .22s;overflow:hidden;}
+.ds-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--border);transition:background .22s;}
+.ds-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.ds-card.pick{border-color:var(--accent2);background:linear-gradient(145deg,#F0FAF4 0%,#FAFFFE 100%);box-shadow:0 0 0 1px var(--accent-border),0 4px 16px rgba(27,107,58,.1);}
+.ds-card.pick::after{background:linear-gradient(90deg,var(--accent),#34D399);}
+.ds-card.pick .badge-chosen{display:flex;}
+.badge-chosen{display:none;position:absolute;top:14px;right:14px;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:3px 10px;border-radius:20px;}
+.badge-chosen::before{content:'✓';font-size:11px;}
+.ds-h{font-family:var(--serif);font-size:17px;font-weight:700;color:var(--ink);margin-bottom:12px;}
+.ds-list{list-style:none;}
+.ds-list li{font-size:12.5px;color:var(--ink3);padding:4px 0;display:flex;gap:8px;align-items:flex-start;line-height:1.5;}
+.ds-list li::before{content:'›';color:var(--border2);flex-shrink:0;margin-top:1px;}
+.ds-card.pick .ds-list li::before{color:var(--accent);}
+.ds-sub{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--ink);margin:36px 0 14px;letter-spacing:-.5px;}
+
+/* ENHANCED ARCH FLOW */
+.arch-flow{margin:28px 0;border-radius:var(--radius);background:var(--ink);padding:36px 32px;position:relative;overflow:hidden;}
+.arch-flow::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 31px,rgba(255,255,255,.025) 31px,rgba(255,255,255,.025) 32px);}
+.arch-flow-label{position:relative;z-index:1;font-family:var(--mono);font-size:9.5px;color:rgba(74,222,128,.5);letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px;}
+.arch-flow-row{position:relative;z-index:1;display:flex;align-items:stretch;gap:0;}
+.arch-node{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:var(--radius-sm);padding:16px 14px;text-align:center;flex:1;transition:border-color .2s,background .2s;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.arch-node:hover{border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.06);}
+.arch-node.hl{border-color:rgba(74,222,128,.55);background:rgba(74,222,128,.09);}
+.arch-icon{font-size:20px;margin-bottom:6px;display:block;}
+.arch-label{font-family:var(--sans);font-size:11.5px;font-weight:700;color:#fff;margin-bottom:3px;}
+.arch-sub{font-size:9.5px;color:rgba(255,255,255,.35);line-height:1.4;}
+.arch-connector{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 8px;gap:4px;flex-shrink:0;min-width:80px;}
+.arch-arrow-line{display:flex;align-items:center;gap:3px;font-family:var(--mono);font-size:9px;color:rgba(74,222,128,.7);white-space:nowrap;}
+.arch-arrow-line::after{content:'▶';font-size:7px;}
+.arch-step-label{font-size:8.5px;color:rgba(255,255,255,.22);font-family:var(--mono);text-align:center;line-height:1.3;}
+.arch-divider{position:relative;z-index:1;margin:16px 0;display:flex;align-items:center;gap:12px;}
+.arch-divider-line{flex:1;height:1px;background:rgba(255,255,255,.07);}
+.arch-divider-label{font-size:9px;font-family:var(--mono);color:rgba(255,255,255,.2);letter-spacing:.08em;white-space:nowrap;}
+.arch-return{flex-direction:row-reverse;}
+.arch-return .arch-arrow-line::after{content:'◀';}
+.arch-legend{position:relative;z-index:1;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:24px;flex-wrap:wrap;}
+.arch-legend-item{display:flex;align-items:center;gap:8px;}
+.arch-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.arch-legend-text{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.28);}
+
+/* DEEP DIVE BUTTONS */
+.deep-dive-btn{display:inline-flex;align-items:center;gap:8px;margin-top:20px;padding:11px 22px;background:var(--ink);color:#fff;border-radius:var(--radius-sm);text-decoration:none;font-size:12.5px;font-weight:600;font-family:var(--sans);transition:all .22s;box-shadow:0 2px 10px rgba(0,0,0,.15);}
+.deep-dive-btn:hover{background:#2D2B28;transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,.22);}
+.deep-dive-btn .arr{transition:transform .22s;}
+.deep-dive-btn:hover .arr{transform:translateX(4px);}
+.deep-dive-btn.green{background:linear-gradient(135deg,var(--accent) 0%,#34D399 100%);box-shadow:0 3px 12px rgba(27,107,58,.32);}
+.deep-dive-btn.green:hover{background:linear-gradient(135deg,var(--accent2) 0%,#10B981 100%);box-shadow:0 6px 20px rgba(27,107,58,.42);}
+
+/* PREVIEW CARDS */
+.preview-card{margin-top:20px;padding:28px 32px;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius);display:flex;align-items:flex-start;gap:22px;transition:all .25s;position:relative;overflow:hidden;}
+.preview-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,var(--accent),#34D399);border-radius:3px 0 0 3px;opacity:0;transition:opacity .25s;}
+.preview-card:hover{border-color:var(--accent-border);box-shadow:0 8px 32px rgba(27,107,58,.1);transform:translateX(2px);}
+.preview-card:hover::before{opacity:1;}
+.preview-card-icon{width:52px;height:52px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent-bg),#D1FAE5);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;box-shadow:0 2px 8px rgba(27,107,58,.12);}
+.preview-card-body{flex:1;}
+.preview-card-title{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--ink);margin-bottom:8px;}
+.preview-card-desc{font-size:13.5px;color:var(--ink3);line-height:1.75;max-width:620px;}
+
+.terminal{margin:24px 0;border-radius:var(--radius);overflow:hidden;border:1px solid #1C1C1C;box-shadow:var(--shadow-md);}
+.term-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#0D1117;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3);}
+.term-dot{width:8px;height:8px;border-radius:50%;}
+.term-dot.g{background:#2EA043;box-shadow:0 0 5px rgba(46,160,67,.6);}
+.term-body{background:#0D1117;padding:20px 24px;font-family:var(--mono);font-size:12.5px;line-height:1.9;color:rgba(255,255,255,.65);}
+.tg{color:#2EA043;}.tc{color:#79C0FF;}.td{color:rgba(255,255,255,.25);}.ty{color:#E3B341;}
+
+.results-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:24px;}
+.result-card{padding:22px;border-radius:var(--radius);background:var(--bg2);border:1.5px solid var(--border);display:flex;gap:16px;align-items:flex-start;transition:all .22s;position:relative;overflow:hidden;}
+.result-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);opacity:0;transition:opacity .22s;}
+.result-card:hover{border-color:var(--accent-border);box-shadow:0 6px 20px rgba(27,107,58,.08);transform:translateY(-2px);}
+.result-card:hover::after{opacity:1;}
+.result-icon{width:36px;height:36px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent-bg),#D1FAE5);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.result-h{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:5px;}
+.result-p{font-size:12.5px;color:var(--ink3);line-height:1.65;}
+
+.ref-list{list-style:none;margin-top:24px;display:flex;flex-direction:column;gap:8px;}
+.ref-item{display:flex;gap:16px;align-items:flex-start;padding:14px 18px;border-radius:var(--radius);background:var(--bg2);border:1px solid var(--border);transition:border-color .15s;}
+.ref-item:hover{border-color:var(--accent-border);}
+.ref-num{font-family:var(--serif);font-size:17px;font-weight:800;color:var(--accent);min-width:26px;padding-top:1px;}
+.ref-title{font-size:13.5px;font-weight:600;color:var(--ink);display:block;margin-bottom:3px;}
+.ref-desc{font-size:12.5px;color:var(--ink3);line-height:1.5;}
+.ref-link{font-family:var(--mono);font-size:11px;color:var(--accent);text-decoration:none;margin-top:5px;display:inline-block;}
+.ref-link:hover{text-decoration:underline;}
+
+.contrib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:28px;}
+.contrib-card{display:flex;align-items:center;gap:16px;padding:20px 22px;border-radius:var(--radius);background:var(--bg2);border:1px solid var(--border);transition:all .2s;}
+.contrib-card:hover{border-color:var(--accent-border);box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.contrib-av{width:46px;height:46px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent) 0%,#34D399 100%);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:20px;font-weight:800;color:#fff;flex-shrink:0;}
+.contrib-name{font-family:var(--serif);font-size:16.5px;font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:3px;}
+.contrib-roll{font-family:var(--mono);font-size:11px;color:var(--ink4);background:var(--bg3);border:1px solid var(--border);padding:2px 8px;border-radius:4px;display:inline-block;}
+.tech-stack{margin-top:32px;padding:22px 26px;border-radius:var(--radius);background:var(--bg2);border:1px solid var(--border);}
+.tech-label{font-size:12px;font-weight:700;color:var(--ink4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;}
+.tech-tags{display:flex;flex-wrap:wrap;gap:8px;}
+.tech-tag{font-size:12px;font-weight:500;padding:4px 12px;border-radius:20px;background:var(--bg3);border:1px solid var(--border);color:var(--ink2);transition:all .15s;}
+.tech-tag:hover{background:var(--accent-bg);border-color:var(--accent-border);color:var(--accent);}
+
+.footer{background:var(--ink);color:rgba(255,255,255,.45);padding:36px 64px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.footer-brand{font-family:var(--serif);font-size:16px;font-weight:700;color:rgba(255,255,255,.7);}
+.footer-links{display:flex;gap:20px;}
+.footer a{color:rgba(74,222,128,.7);text-decoration:none;transition:color .15s;}
+.footer a:hover{color:#34D399;}
+
+.reveal{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease;}
+.reveal.visible{opacity:1;transform:none;}
+.d1{transition-delay:.08s;}.d2{transition-delay:.18s;}.d3{transition-delay:.28s;}
+
+@media(max-width:900px){
+  :root{--sidebar-w:0px;}
+  .sidebar{display:none;}#progress{left:0;}
+  .hero,.section{padding:48px 28px;}
+  .hero-watermark{display:none;}
+  .ds-grid{grid-template-columns:1fr;}
+  .results-grid{grid-template-columns:1fr;}
+  .hero-stats{flex-wrap:wrap;gap:24px;}
+  .stat{padding-left:0;border-left:none;padding-top:18px;border-top:1px solid var(--border);}
+  .stat:first-child{padding-top:0;border-top:none;}
+  .footer{padding:32px 28px;flex-direction:column;text-align:center;}
+  .arch-flow-row{flex-direction:column;}
+  .arch-connector{flex-direction:row;padding:8px 0;}
+  .contrib-grid{grid-template-columns:1fr;}
+}
+@media print{
+  .sidebar,.deep-dive-btn,.hero-actions{display:none!important;}
+  .main{margin-left:0!important;}
+  #progress{display:none;}
+}
+  </style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-logo" href="#top">
+      <div class="sidebar-logo-icon">🌳</div>
+      <div class="sidebar-logo-text">Tree<em>base</em></div>
+    </a>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <span class="nav-group-label">Overview</span>
+      <a class="nav-link active" href="#intro"><span class="nav-num">I</span> Introduction<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#problem"><span class="nav-num">II</span> Problem Statement<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#novelty"><span class="nav-num">III</span> Novelty<span class="nav-link-indicator"></span></a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Methodology</span>
+      <a class="nav-link" href="#ds"><span class="nav-num">§1</span> Data Structures<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#algo"><span class="nav-num">§2</span> Algorithms<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#complexity"><span class="nav-num">§3</span> Complexity<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#compare"><span class="nav-num">§4</span> DS Comparison<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#impl"><span class="nav-num">§5</span> Implementation<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#results"><span class="nav-num">§6</span> Results<span class="nav-link-indicator"></span></a>
+    </div>
+    <div class="nav-group">
+      <span class="nav-group-label">Meta</span>
+      <a class="nav-link" href="#refs"><span class="nav-num">V</span> References<span class="nav-link-indicator"></span></a>
+      <a class="nav-link" href="#contributors"><span class="nav-num">VI</span> Contributors<span class="nav-link-indicator"></span></a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-actions">
+      <a href="https://treebase.onrender.com" target="_blank" class="sidebar-btn sidebar-btn-primary">↗ Live Demo</a>
+      <a href="https://github.com/raghuramch028/Treebase" target="_blank" class="sidebar-btn sidebar-btn-secondary">⎇ GitHub Source</a>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main" id="mainContent">
+
+  <!-- HERO -->
+  <div class="hero" id="top">
+    <div class="hero-grid-bg"></div>
+    <div class="hero-watermark">VCS</div>
+    <h1>A Visual <em>Version Control</em><br/>System</h1>
+    <p class="hero-desc">Treebase is a fully-featured VCS and in-browser Python editor demonstrating how classical data structures — N-ary trees, hash maps, and bounded deques — power the same primitives used by Git, Mercurial, and Perforce.</p>
+    <div class="hero-actions">
+      <a href="https://treebase.onrender.com" target="_blank" class="btn-primary">↗&nbsp; Launch Live Demo</a>
+      <a href="https://github.com/raghuramch028/Treebase" target="_blank" class="btn-secondary">⎇&nbsp; View on GitHub</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-val">O<span>(1)</span></div>
+        <div class="stat-label">Commit Checkout</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val"><span class="count" data-target="416" data-suffix="×">0×</span></div>
+        <div class="stat-label">Faster than FS</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val"><span class="count" data-target="3">0</span></div>
+        <div class="stat-label">Core ADTs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val"><span class="count" data-target="100" data-display="∞">0</span></div>
+        <div class="stat-label">Concurrent Users</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- I -->
+  <section class="section white reveal" id="intro">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">Section I</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Introduction &amp; Motivation</h2>
+      <p class="sec-sub">Why rebuild something that already exists?</p>
+      <div class="prose">
+        <p>Every software developer relies on version control, yet the mechanics of tools like Git remain opaque even to experienced practitioners. Treebase was built to answer one question: <strong>can the core primitives of a VCS be implemented using only the data structures taught in a standard DSA course?</strong></p>
+        <p>The motivation was two-fold. First, to demystify version control by building it from scratch — observing exactly where trees, hash maps, and stacks are the natural fit. Second, to ship something real: a tool that works in a browser, requires no installation, persists state, and supports genuine multi-user isolation without any login.</p>
+        <p>The result is <strong>Treebase</strong> — a web-hosted VCS and Python code editor supporting commits, branching, 3-way merging, undo/redo, and a live visual commit tree, all backed by PostgreSQL and deployed on Render.</p>
+      </div>
+      <div class="feat-grid reveal d1">
+        <div class="feat-card"><div class="feat-icon">🌳</div><div class="feat-title">N-ary Commit Tree</div><p class="feat-desc">Every commit is a node in an N-ary tree. Child nodes represent commits on branches that diverge from a parent, forming a genuine DAG.</p><span class="feat-badge">TREE · O(N) DFS</span></div>
+        <div class="feat-card"><div class="feat-icon">⚡</div><div class="feat-title">O(1) Checkout</div><p class="feat-desc">A parallel hash map keeps every commit addressable by ID. No tree walk needed — direct lookup, always O(1).</p><span class="feat-badge">HASH MAP · O(1)</span></div>
+        <div class="feat-card"><div class="feat-icon">↩</div><div class="feat-title">Bounded Undo / Redo</div><p class="feat-desc">Two bounded deques act as LIFO stacks with automatic O(1) eviction at depth 50 — no memory leak possible.</p><span class="feat-badge">DEQUE · O(1)</span></div>
+        <div class="feat-card"><div class="feat-icon">🔐</div><div class="feat-title">Multi-tenant Isolation</div><p class="feat-desc">Each visitor gets a UUID session. The entire VCS engine is serialised per-user to PostgreSQL via pickle — zero sign-up required.</p><span class="feat-badge">SESSION · UUID</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- II -->
+  <section class="section reveal" id="problem">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">Section II</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Problem Statement &amp; Real-World Relevance</h2>
+      <p class="sec-sub">The gap this project addresses</p>
+      <div class="prose">
+        <p>Version control systems are among the most widely used software tools in the world, yet virtually every tutorial treats them as black boxes. Students learn <em>commands</em> without understanding <em>mechanisms</em>. What data structure does <code>git checkout</code> actually traverse? Why can Git merge two branches that diverged 200 commits ago in milliseconds?</p>
+        <p>Treebase answers these questions by forcing every VCS primitive to be implemented explicitly. There is no library call for "branching" — the developer must choose an N-ary tree and understand why a linked list fails. There is no built-in "fast checkout" — the developer must add a hash map and realise that O(1) lookup is what makes it instant.</p>
+        <div class="callout"><strong>Core thesis:</strong> The data structures taught in any undergraduate DSA course are sufficient to implement a production-grade version control system with O(1) commit checkout, genuine branching, and conflict-aware 3-way merging.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- III -->
+  <section class="section white reveal" id="novelty">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">Section III</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Novelty &amp; Contributions</h2>
+      <p class="sec-sub">What makes Treebase different from a toy project</p>
+      <div class="prose">
+        <p>Unlike academic VCS demonstrations that exist only as command-line scripts, Treebase is a <strong>deployed, multi-tenant web application</strong> with a production database backend. Its novel contributions are: (1) a zero-login multi-tenant isolation architecture using UUID sessions backed by PostgreSQL; (2) an in-browser Python execution sandbox with subprocess isolation and a 10 s timeout; (3) a live visual commit tree generated from DFS traversal of the N-ary structure and rendered as Mermaid.js diagrams; and (4) a genuine 3-way merge implementation using the same diff3 algorithm as Mercurial.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- §1 DS -->
+  <section class="section reveal" id="ds">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">§ 1 — Methodology</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Data Structures Used</h2>
+      <p class="sec-sub">Three classical ADTs compose the entire engine</p>
+      <div class="prose">
+        <p><strong>N-ary Tree (CommitNode):</strong> Each commit is a node with a list of children. A root commit on <code>main</code> can have one child per commit, but a branch point creates multiple children — one per branch. Merge commits link back via a <code>merged_from</code> pointer, forming a true DAG. DFS traversal of this tree in O(N) generates the Mermaid commit diagram.</p>
+        <p><strong>Hash Maps (commit_map, branches):</strong> Two parallel dictionaries index the tree. <code>commit_map{id → node}</code> enables O(1) checkout by any commit ID. <code>branches{name → head_node}</code> enables O(1) branch switching. Without these maps, checkout would require an O(N) DFS walk.</p>
+        <p><strong>Bounded Deques (undo_stack, redo_stack):</strong> Python's <code>collections.deque(maxlen=50)</code> acts as a LIFO stack where the oldest entry is automatically evicted when capacity is exceeded, making both push and eviction O(1) — impossible with a plain list.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- §2 ALGORITHMS -->
+  <section class="section white reveal" id="algo">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">§ 2 — Methodology</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Algorithms</h2>
+      <p class="sec-sub">Five core algorithms power Treebase — from how commits are stored and visualised, to how merges resolve conflicts. Each is rooted in a classical data structure and has a full worked example in the Deep Dive.</p>
+
+      <div class="preview-card reveal d1">
+        <div class="preview-card-icon">🌳</div>
+        <div class="preview-card-body">
+          <div class="preview-card-title">① N-ary Tree + DFS Traversal</div>
+          <p class="preview-card-desc">Every commit is a node whose <em>children list</em> can hold any number of child commits. When a branch is created, a new child is added to the current node — the tree forks naturally. To generate the live visual commit diagram, Treebase performs a <strong>Depth-First Search</strong> starting from the root, visiting every node exactly once and emitting Mermaid.js diagram syntax along the way. DFS keeps commits from the same branch contiguous in the output, producing a cleaner layout than breadth-first would. Time: <strong>O(N)</strong> — one pass through all N commits.</p>
+          <a href="deep-dive.html#nary" class="deep-dive-btn green">See Full DFS Walkthrough <span class="arr">→</span></a>
+        </div>
+      </div>
+
+      <div class="preview-card reveal d2" style="margin-top:14px">
+        <div class="preview-card-icon">⚡</div>
+        <div class="preview-card-body">
+          <div class="preview-card-title">② Hash Map — O(1) Checkout &amp; Branch Switching</div>
+          <p class="preview-card-desc">Treebase maintains two parallel dictionaries alongside the N-ary tree: one mapping every commit ID directly to its node, and another mapping every branch name to its HEAD node. Without these maps, checking out any commit would require walking the entire tree — O(N). With them, it is a single key lookup, always <strong>O(1)</strong>, whether the repo has 5 commits or 500,000. Branch switching is equally instant: one lookup returns the HEAD node of any branch by name, and the editor content updates immediately from the stored snapshot.</p>
+          <a href="deep-dive.html#hashmap" class="deep-dive-btn green">See the Maps in Action <span class="arr">→</span></a>
+        </div>
+      </div>
+
+      <div class="preview-card reveal d3" style="margin-top:14px">
+        <div class="preview-card-icon">↩</div>
+        <div class="preview-card-body">
+          <div class="preview-card-title">③ Undo / Redo with Bounded Deques</div>
+          <p class="preview-card-desc">Two bounded double-ended queues act as LIFO stacks for undo and redo. Every time the user types, the previous content is pushed onto the undo stack before being overwritten. The redo stack is cleared on any new edit — exactly how every modern editor behaves. The critical design choice is the <strong>hard capacity limit of 50</strong>: when a full deque receives a new entry, the oldest is automatically discarded in O(1). A plain list would grow without bound, making the session blob unsafe to persist to PostgreSQL. The deque gives a provable memory guarantee and O(1) push and pop simultaneously.</p>
+          <a href="deep-dive.html#deque" class="deep-dive-btn green">See Deque Visualisation <span class="arr">→</span></a>
+        </div>
+      </div>
+
+      <div class="preview-card reveal d1" style="margin-top:14px">
+        <div class="preview-card-icon">🔍</div>
+        <div class="preview-card-body">
+          <div class="preview-card-title">④ LCA — Lowest Common Ancestor</div>
+          <p class="preview-card-desc">Before merging two branches, Treebase must identify the last commit both branches share — their <strong>Lowest Common Ancestor</strong>. The algorithm first walks all the way up branch A, collecting every ancestor commit ID into a hash set. It then walks up branch B one step at a time, checking each commit against that set. The first match is the LCA. Using a hash set for membership checks keeps each lookup O(1), making the overall algorithm <strong>O(D)</strong> where D is the depth of the shallower branch. The LCA's content snapshot becomes the <em>base</em> document fed into the 3-way merge — without it, the merge has no shared reference point.</p>
+          <a href="deep-dive.html#lca" class="deep-dive-btn green">Explore with Worked Example <span class="arr">→</span></a>
+        </div>
+      </div>
+
+      <div class="preview-card reveal d2" style="margin-top:14px">
+        <div class="preview-card-icon">🔀</div>
+        <div class="preview-card-body">
+          <div class="preview-card-title">⑤ 3-Way Merge &amp; Conflict Resolution</div>
+          <p class="preview-card-desc">Given three documents — <em>base</em> (LCA content), <em>mine</em> (current branch HEAD), and <em>theirs</em> (target branch HEAD) — Treebase applies the same <strong>diff3 algorithm</strong> used internally by Mercurial. Each line of the file is classified: if only one branch changed it relative to the base, that change is accepted silently; if both branches changed the same line to the same value, the change is also accepted; only when both branches changed the same line to <em>different</em> values does a conflict marker appear. This is smarter than a 2-way diff, which would flag any difference as a conflict even if both branches independently made the same edit. Time: <strong>O(L)</strong> — proportional to the number of lines in the file.</p>
+          <a href="deep-dive.html#merge" class="deep-dive-btn green">See Full Before / After Example <span class="arr">→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §3 COMPLEXITY -->
+  <section class="section reveal" id="complexity">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">§ 3 — Methodology</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Complexity Analysis</h2>
+      <p class="sec-sub">Every core operation with its underlying ADT and formal complexity</p>
+      <div class="tbl-wrap reveal d1">
+        <table>
+          <thead><tr><th>Operation</th><th>Underlying ADT</th><th>Time</th><th>Space</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Commit</td><td><code>N-ary Tree + Hash Map</code></td><td><span class="badge b-green">O(1)</span></td><td>O(N) total</td><td>Append child; insert into map</td></tr>
+            <tr><td>Checkout Commit</td><td><code>commit_map{}</code></td><td><span class="badge b-green">O(1)</span></td><td>O(N) total</td><td>Direct hash map lookup by ID</td></tr>
+            <tr><td>Branch Checkout</td><td><code>branches{}</code></td><td><span class="badge b-green">O(1)</span></td><td>O(B) branches</td><td>Map: branch name → head node</td></tr>
+            <tr><td>Undo / Redo</td><td><code>deque(maxlen=50)</code></td><td><span class="badge b-green">O(1)</span></td><td>O(U) ≤ 50</td><td>LIFO pop/append; bounded eviction</td></tr>
+            <tr><td>Visualise Commit Tree</td><td><code>N-ary Tree DFS</code></td><td><span class="badge b-amber">O(N)</span></td><td>O(N) call stack</td><td>Visits every commit exactly once</td></tr>
+            <tr><td>LCA Detection</td><td><code>Parent pointers</code></td><td><span class="badge b-amber">O(D)</span></td><td>O(D) ancestor set</td><td>D = depth of shallower branch</td></tr>
+            <tr><td>3-way Merge</td><td><code>merge3 library</code></td><td><span class="badge b-amber">O(L)</span></td><td>O(L) line arrays</td><td>L = lines in file</td></tr>
+            <tr><td>Activity Log Append</td><td><code>deque(maxlen=7)</code></td><td><span class="badge b-green">O(1)</span></td><td>O(1) fixed</td><td>Oldest auto-evicted</td></tr>
+            <tr><td>Session Save / Load</td><td><code>pickle + PostgreSQL</code></td><td><span class="badge b-blue">O(N)</span></td><td>O(N) blob</td><td>N = objects in object graph</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- §4 COMPARE -->
+  <section class="section white reveal" id="compare">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">§ 4 — Methodology</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Comparison Among Alternative Data Structures</h2>
+      <p class="sec-sub">Why each ADT was selected over its alternatives</p>
+      <p class="ds-sub">Commit History Storage</p>
+      <div class="ds-grid reveal d1">
+        <div class="ds-card"><div class="ds-h">Linked List</div><ul class="ds-list"><li>O(N) checkout — walk from HEAD</li><li>No natural branching support</li><li>Merges duplicate entire chain</li><li>Simple but wrong fit</li></ul></div>
+        <div class="ds-card pick"><span class="badge-chosen">CHOSEN</span><div class="ds-h">N-ary Tree + Hash Map</div><ul class="ds-list"><li>O(1) checkout via parallel map</li><li>Branching = new child node naturally</li><li>Merges = dual-parent pointer</li><li>DFS traversal gives visual diagram</li></ul></div>
+        <div class="ds-card"><div class="ds-h">Relational Table (SQL)</div><ul class="ds-list"><li>O(log N) indexed, O(N) full scan</li><li>Branching needs multi-join queries</li><li>Great for filtering; overkill here</li><li>Network round-trip per operation</li></ul></div>
+      </div>
+      <p class="ds-sub">Undo / Redo Buffer</p>
+      <div class="ds-grid reveal d1">
+        <div class="ds-card"><div class="ds-h">Unbounded List Stack</div><ul class="ds-list"><li>O(1) push/pop amortised</li><li>Grows without bound → memory leak</li><li>No eviction policy possible</li></ul></div>
+        <div class="ds-card pick"><span class="badge-chosen">CHOSEN</span><div class="ds-h">Bounded Deque (maxlen=50)</div><ul class="ds-list"><li>O(1) push/pop from both ends</li><li>Oldest entry auto-evicted at capacity</li><li>Constant memory — provably safe</li></ul></div>
+        <div class="ds-card"><div class="ds-h">Circular Buffer (Array)</div><ul class="ds-list"><li>O(1) amortised</li><li>Manual index wrap arithmetic</li><li>No Python built-in; error-prone</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §5 IMPLEMENTATION -->
+  <section class="section reveal" id="impl">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">§ 5 — Methodology</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Software Implementation</h2>
+      <p class="sec-sub">Full-stack architecture and deployment pipeline</p>
+      <div class="prose">
+        <p>Treebase is a full-stack web application. The frontend is pure <strong>HTML5 + CSS3 + Vanilla JavaScript</strong> with Mermaid.js for commit tree diagrams. The backend is <strong>Python Flask</strong> with a clean REST API. State is persisted to <strong>PostgreSQL</strong> (production) or SQLite (local dev), containerised via <strong>Docker</strong> and served by <strong>Gunicorn on Render</strong>.</p>
+      </div>
+
+      <div class="arch-flow reveal d1" style="margin-top:28px">
+        <div class="arch-flow-label">▶ Full-stack data flow — from browser keystroke to PostgreSQL and back</div>
+        <div class="arch-flow-row">
+          <div class="arch-node hl">
+            <span class="arch-icon">🖥️</span>
+            <div class="arch-label">Browser Editor</div>
+            <div class="arch-sub">HTML · CSS · Vanilla JS<br/>Mermaid.js commit tree</div>
+          </div>
+          <div class="arch-connector">
+            <div class="arch-arrow-line">REST API (JSON)</div>
+            <div class="arch-step-label">POST /api/commit<br/>GET /api/tree</div>
+          </div>
+          <div class="arch-node">
+            <span class="arch-icon">🐍</span>
+            <div class="arch-label">Flask Backend</div>
+            <div class="arch-sub">UUID sessions<br/>VCS engine per user</div>
+          </div>
+          <div class="arch-connector">
+            <div class="arch-arrow-line">pickle → BYTEA</div>
+            <div class="arch-step-label">entire object graph<br/>serialised per save</div>
+          </div>
+          <div class="arch-node">
+            <span class="arch-icon">🗄️</span>
+            <div class="arch-label">PostgreSQL</div>
+            <div class="arch-sub">user_sessions table<br/>BYTEA blob per UUID</div>
+          </div>
+        </div>
+        <div class="arch-divider">
+          <div class="arch-divider-line"></div>
+          <div class="arch-divider-label">▼ Persistence detail</div>
+          <div class="arch-divider-line"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;position:relative;z-index:1;">
+          <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);">
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(74,222,128,.6);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">① Serialise</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.6;">The entire VCS object graph — tree, hash maps, deques — is converted to a binary blob using object graph serialisation.</div>
+          </div>
+          <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);">
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(74,222,128,.6);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">② Upsert</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.6;">The blob is written to <strong style="color:#fff;">user_sessions</strong> keyed by UUID. If the session already exists, it's updated in-place — no duplicates.</div>
+          </div>
+          <div style="padding:16px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);">
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(74,222,128,.6);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">③ Restore</div>
+            <div style="font-size:12.5px;color:rgba(255,255,255,.65);line-height:1.6;">On any new request, the blob is fetched by UUID and deserialised back into a live VCS engine with full commit history intact.</div>
+          </div>
+        </div>
+        <div class="arch-legend">
+          <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#4ADE80;"></div><div class="arch-legend-text">Production: PostgreSQL on Render</div></div>
+          <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#60A5FA;"></div><div class="arch-legend-text">Local dev: SQLite fallback (auto-detected)</div></div>
+          <div class="arch-legend-item"><div class="arch-legend-dot" style="background:#DCDCAA;"></div><div class="arch-legend-text">Containerised via Docker + Gunicorn (2 workers)</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §6 RESULTS -->
+  <section class="section white reveal" id="results">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">§ 6 — Methodology</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Results &amp; Performance Analysis</h2>
+      <p class="sec-sub">Benchmarks, validation outcomes, and system correctness</p>
+      <div class="prose"><p>Treebase achieves its primary goal: <strong>O(1) commit checkout</strong>, independent of repository size. The benchmark below was run against 10,000 simulated commits.</p></div>
+      <div class="terminal reveal d1">
+        <div class="term-bar"><div class="term-dot g"></div> python docs/benchmark.py</div>
+        <div class="term-body">
+<span class="td">Benchmarking Checkout Operation...</span>
+<span class="td">──────────────────────────────────────────</span>
+<span class="tc">Treebase Hash Map Checkout:</span>  <span class="tg">0.00000120 s</span>  <span class="td">(O(1))</span>
+<span class="tc">File System Checkout:      </span>  <span class="ty">0.00050000 s</span>  <span class="td">(O(N) file sizing)</span>
+<span class="tc">Speedup:                   </span>  <span class="tg">416.66×</span> <span class="td">faster</span>
+<span class="td">──────────────────────────────────────────</span>
+<span class="td">N = 10,000 commits · Python 3.10</span>
+        </div>
+      </div>
+      <div class="results-grid reveal d1">
+        <div class="result-card"><div class="result-icon">✅</div><div><div class="result-h">Commit &amp; Branching</div><p class="result-p">All commit and branch operations confirmed O(1). No regression from 1 to 10,000 commits.</p></div></div>
+        <div class="result-card"><div class="result-icon">✅</div><div><div class="result-h">Merge Correctness</div><p class="result-p">3-way merge correctly resolves non-conflicting changes and generates conflict markers on overlap.</p></div></div>
+        <div class="result-card"><div class="result-icon">✅</div><div><div class="result-h">Multi-tenant Isolation</div><p class="result-p">Concurrent sessions in separate tabs confirmed fully isolated — no data leakage between UUID sessions.</p></div></div>
+        <div class="result-card"><div class="result-icon">✅</div><div><div class="result-h">State Persistence</div><p class="result-p">Closing and reopening the browser restores the exact commit tree, HEAD position, and file content.</p></div></div>
+      </div>
+      <div class="tbl-wrap reveal d2" style="margin-top:24px">
+        <table>
+          <thead><tr><th>Feature</th><th>Status</th><th>Validation Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Commit / Checkout</td><td><span class="badge b-green">Working</span></td><td>10k commits, O(1) confirmed</td></tr>
+            <tr><td>Branch create / switch</td><td><span class="badge b-green">Working</span></td><td>Multiple branches, independent HEADs</td></tr>
+            <tr><td>3-way Merge + Conflicts</td><td><span class="badge b-green">Working</span></td><td>Conflict markers generated correctly</td></tr>
+            <tr><td>Visual Commit Tree</td><td><span class="badge b-green">Working</span></td><td>Mermaid.js renders DFS output live</td></tr>
+            <tr><td>Undo / Redo (50 levels)</td><td><span class="badge b-green">Working</span></td><td>Bounded deque, auto-eviction confirmed</td></tr>
+            <tr><td>Python Code Execution</td><td><span class="badge b-green">Working</span></td><td>subprocess sandbox, 10s timeout</td></tr>
+            <tr><td>Session Persistence</td><td><span class="badge b-green">Working</span></td><td>PostgreSQL BYTEA survives server restarts</td></tr>
+            <tr><td>SQLite Local Fallback</td><td><span class="badge b-green">Working</span></td><td>Auto-detected when DATABASE_URL absent</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- V REFS -->
+  <section class="section reveal" id="refs">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">Section V</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">References</h2>
+      <p class="sec-sub">Libraries, algorithms, and academic sources cited</p>
+      <ul class="ref-list">
+        <li class="ref-item"><div class="ref-num">1</div><div><strong class="ref-title">Flask — The Pallets Projects</strong><p class="ref-desc">Python micro web framework used for the REST API layer and session middleware.</p><a class="ref-link" href="https://flask.palletsprojects.com" target="_blank">flask.palletsprojects.com ↗</a></div></li>
+        <li class="ref-item"><div class="ref-num">2</div><div><strong class="ref-title">Mermaid.js — Diagram as Code</strong><p class="ref-desc">JavaScript library rendering the commit tree from DFS-generated Mermaid syntax strings.</p><a class="ref-link" href="https://mermaid.js.org" target="_blank">mermaid.js.org ↗</a></div></li>
+        <li class="ref-item"><div class="ref-num">3</div><div><strong class="ref-title">merge3 — Python 3-way Merge Library</strong><p class="ref-desc">Implements the same diff3 algorithm used internally by Mercurial for conflict-aware merging.</p><a class="ref-link" href="https://pypi.org/project/merge3/" target="_blank">pypi.org/project/merge3 ↗</a></div></li>
+        <li class="ref-item"><div class="ref-num">4</div><div><strong class="ref-title">psycopg2 — PostgreSQL Adapter for Python</strong><p class="ref-desc">Used for all production database I/O including binary BYTEA serialisation of VCS state.</p><a class="ref-link" href="https://www.psycopg.org" target="_blank">psycopg.org ↗</a></div></li>
+        <li class="ref-item"><div class="ref-num">5</div><div><strong class="ref-title">Pro Git — Chacon &amp; Straub (2nd Ed.)</strong><p class="ref-desc">Reference for DAG-based commit model, tree objects, blob hashing, and plumbing commands.</p><a class="ref-link" href="https://git-scm.com/book/en/v2/Git-Internals-Git-Objects" target="_blank">git-scm.com — Git Internals ↗</a></div></li>
+        <li class="ref-item"><div class="ref-num">6</div><div><strong class="ref-title">Introduction to Algorithms — CLRS (4th Ed.)</strong><p class="ref-desc">Theoretical basis for N-ary trees, hash maps, DFS traversal, and LCA algorithms.</p></div></li>
+        <li class="ref-item"><div class="ref-num">7</div><div><strong class="ref-title">Python collections.deque — Python Docs</strong><p class="ref-desc">Built-in bounded double-ended queue used for undo/redo stacks and the activity log.</p><a class="ref-link" href="https://docs.python.org/3/library/collections.html#collections.deque" target="_blank">docs.python.org ↗</a></div></li>
+        <li class="ref-item"><div class="ref-num">8</div><div><strong class="ref-title">Gunicorn — Python WSGI HTTP Server</strong><p class="ref-desc">Production WSGI server; 2-worker config for concurrent multi-tenant session handling.</p><a class="ref-link" href="https://gunicorn.org" target="_blank">gunicorn.org ↗</a></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- VI CONTRIBUTORS -->
+  <section class="section white reveal" id="contributors">
+    <div class="section-inner">
+      <div class="eyebrow"><div class="eye-tag">Section VI</div><div class="eye-line"></div></div>
+      <h2 class="sec-title">Contributors</h2>
+      <p class="sec-sub">Amrita Vishwa Vidyapeetham</p>
+      <div class="contrib-grid">
+        <div class="contrib-card"><div class="contrib-av">R</div><div><div class="contrib-name">Ch. Raghuram</div><span class="contrib-roll">CB.SC.U4AIE25108</span></div></div>
+        <div class="contrib-card"><div class="contrib-av">V</div><div><div class="contrib-name">A. Vikram Rao</div><span class="contrib-roll">CB.SC.U4AIE25105</span></div></div>
+        <div class="contrib-card"><div class="contrib-av">A</div><div><div class="contrib-name">Y. Aswitha</div><span class="contrib-roll">CB.SC.U4AIE25162</span></div></div>
+        <div class="contrib-card"><div class="contrib-av">P</div><div><div class="contrib-name">P. Varsha</div><span class="contrib-roll">CB.SC.U4AIE25141</span></div></div>
+      </div>
+      <div class="tech-stack reveal d2">
+        <div class="tech-label">Tech Stack</div>
+        <div class="tech-tags">
+          <span class="tech-tag">Python 3.10</span><span class="tech-tag">Flask</span><span class="tech-tag">PostgreSQL</span><span class="tech-tag">psycopg2</span><span class="tech-tag">merge3</span><span class="tech-tag">Gunicorn</span><span class="tech-tag">Docker</span><span class="tech-tag">Render</span><span class="tech-tag">HTML5</span><span class="tech-tag">CSS3</span><span class="tech-tag">Vanilla JS</span><span class="tech-tag">Mermaid.js</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-brand">🌳 Treebase</div>
+    <div class="footer-links">
+      <a href="https://treebase.onrender.com" target="_blank">Live Demo ↗</a>
+      <a href="https://github.com/raghuramch028/Treebase" target="_blank">GitHub ↗</a>
+      <a href="deep-dive.html" target="_blank">Deep Dive ↗</a>
+    </div>
+  </footer>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+/* Progress bar */
+const prog=document.getElementById('progress');
+window.addEventListener('scroll',()=>{
+  const d=document.documentElement;
+  prog.style.transform=`scaleX(${d.scrollTop/(d.scrollHeight-d.clientHeight)})`;
+},{passive:true});
+
+/* Reveal on scroll */
+const ro=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');ro.unobserve(e.target);}});
+},{threshold:0.05});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+/* Active nav */
+const navLinks=document.querySelectorAll('.nav-link');
+const secs=document.querySelectorAll('section[id]');
+const navObserver=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      navLinks.forEach(l=>{l.classList.remove('active');if(l.getAttribute('href')==='#'+entry.target.id)l.classList.add('active');});
+    }
+  });
+},{rootMargin:'-20% 0px -70% 0px'});
+secs.forEach(s=>navObserver.observe(s));
+
+/* Animated count-up */
+function easeOut(t){return 1-Math.pow(1-t,4);}
+function animateCount(el){
+  const target=parseInt(el.dataset.target,10);
+  const suffix=el.dataset.suffix||'';
+  const display=el.dataset.display;
+  const dur=1800,start=performance.now();
+  (function step(now){
+    const p=Math.min((now-start)/dur,1),e=easeOut(p),val=Math.round(e*target);
+    if(display){
+      // For display values (like ∞), show a count-up then snap to symbol
+      el.textContent=p>=1?display:val.toLocaleString()+'+';
+    } else {
+      el.textContent=val.toLocaleString()+suffix;
+    }
+    if(p<1)requestAnimationFrame(step);
+  })(start);
+}
+const statsEl=document.querySelector('.hero-stats');
+if(statsEl){
+  const ob=new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting){
+      document.querySelectorAll('.count[data-target]').forEach(animateCount);
+      ob.disconnect();
+    }
+  },{threshold:0.4});
+  ob.observe(statsEl);
+}
+</script>
+</body>
+</html>
