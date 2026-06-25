@@ -1,12 +1,30 @@
-# Byte-compiled / optimized / DLL files
+# Python Compiled Files
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
-# Treebase local state database
-.treebase_store.pkl
+# Python Distribution / Packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Virtual environment
+# Virtual Environments
 .env/
 .venv/
 env/
@@ -15,14 +33,45 @@ ENV/
 env.bak/
 venv.bak/
 
-# Environment variables
+# Environment configurations
 .env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.env
 
-# Editor directories and files
+# SQLite and Local Databases (Must be gitignored)
+*.db
+*.sqlite
+*.sqlite3
+.treebase_store.db
+.treebase_store.pkl
+.treebase_store.db-journal
+
+# PostgreSQL temp/dump files
+*.sql
+*.dump
+
+# Docker logs and overrides
+.docker/
+docker-compose.override.yml
+*.log
+
+# Gunicorn / WSGI log files
+gunicorn.log
+gunicorn.err
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Editor / IDE directories
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Docker
-.dockerignore
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
